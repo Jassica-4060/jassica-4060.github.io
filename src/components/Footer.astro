@@ -1,0 +1,17 @@
+---
+import { profile } from '../data/profile';
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="wrap row">
+    <p>© {year} {profile.name}（{profile.nameEn}）｜{profile.title}</p>
+    <a href="#top">回到頂端 ↑</a>
+  </div>
+</footer>
+
+<style>
+  .site-footer { background: var(--ink); color: var(--paper); border-top: 1px solid color-mix(in srgb, var(--paper) 20%, transparent); }
+  .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-block: 28px; font-size: 0.88rem; }
+  p { margin: 0; }
+  a { font-weight: 700; text-underline-offset: 4px; }
+</style>

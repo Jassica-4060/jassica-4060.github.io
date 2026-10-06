@@ -1,0 +1,46 @@
+---
+import Logo from '../assets/logo.svg';
+---
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="C MIN 黃思敏｜回首頁">
+      <Logo width="96" height="44" aria-hidden="true" />
+    </a>
+    <nav aria-label="主選單">
+      <ul>
+        <li><a href="/#work">作品</a></li>
+        <li class="opt"><a href="/#approach">工作方式</a></li>
+        <li>
+          <a href="/about/">
+            關於我
+            <svg class="lock" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><rect x="1" y="6" width="10" height="7.5" rx="1.5" fill="currentColor"/><path d="M3 6V4.2a3 3 0 0 1 6 0V6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <span class="sr-only">（需密碼）</span>
+          </a>
+        </li>
+        <li><a class="cta" href="/#contact">聯絡</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 12px; }
+  .brand { color: var(--ink); flex: none; }
+  .brand :global(svg) { width: 88px; height: auto; }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: clamp(4px, 1.6vw, 20px); }
+  nav a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 10px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 0.95rem;
+    transition: background 0.2s;
+  }
+  nav a:hover { background: var(--accent); }
+  .cta { background: var(--ink); color: var(--paper); padding: 8px 16px; }
+  .cta:hover { color: var(--ink); }
+  @media (max-width: 520px) { .opt { display: none; } nav a { padding: 8px 8px; } .cta { padding: 8px 14px; } }
+</style>

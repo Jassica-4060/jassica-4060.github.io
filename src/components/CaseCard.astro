@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from 'astro:content';
+interface Props { entry: CollectionEntry<'cases'>; index: number; variant: 'ink' | 'accent' | 'paper'; size?: 'lg' | 'sm'; }
+const { entry, index, variant, size = 'lg' } = Astro.props;
+const d = entry.data;
+const num = String(d.order).padStart(2, '0');
+---
+<article class:list={['card', variant, size]} style={`--i:${index}`}>
+  <a class="hit" href={`/work/${entry.id}/`} aria-label={`閱讀案例：${d.product}｜${d.title}`}></a>
+  <span class="num" aria-hidden="true">{num}</span>
+  <div class="top">
+    <p class="product">{d.product}</p>
+    <p class="meta">{d.duration}</p>
+  </div>
+  <h3>{d.title}</h3>
+  <p class="summary">{d.summary}</p>
+  <div class="bottom">
+    <ul class="proves" aria-label="這個案例證明的能力">
+      {d.proves.map((p) => <li class="tag">{p}</li>)}
+    </ul>
+    <span class="go" aria-hidden="true">閱讀案例 <span class="arrow">→</span></span>
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative; overflow: hidden; isolation: isolate;
+    border-radius: calc(var(--radius) * 1.4);
+    padding: clamp(24px, 4vw, 56px);
+    display: flex; flex-direction: column; gap: 16px;
+    transition: transform 0.5s var(--ease);
+  }
+  .card.lg { min-height: min(72vh, 620px); justify-content: space-between; }
+  .card.sm { min-height: 360px; }
+  .ink { background: var(--ink); color: var(--paper); }
+  .accent { background: var(--accent); color: var(--ink); }
+  .paper { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); }
+
+  .hit { position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+  .hit:focus-visible { outline-offset: -6px; }
+
+  .num {
+    position: absolute; right: -0.04em; bottom: -0.2em; z-index: -1;
+    font-family: var(--font-display); line-height: 1; letter-spacing: -0.04em;
+    font-size: clamp(9rem, 26vw, 22rem);
+    color: transparent; -webkit-text-stroke: 2px currentColor; opacity: 0.35;
+    transition: transform 0.8s var(--ease);
+  }
+  .sm .num { font-size: clamp(7rem, 14vw, 11rem); }
+  .card:hover .num { transform: translateY(-12px) rotate(-3deg); }
+
+  .top { display: flex; justify-content: space-between; gap: 16px; font-weight: 700; letter-spacing: 0.06em; }
+  .top p { margin: 0; }
+  .meta { opacity: 0.85; }
+  h3 { font-size: clamp(2rem, 5.2vw, 4.6rem); letter-spacing: -0.01em; max-width: 12em; }
+  .sm h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+  .summary { max-width: 34em; font-size: 1.05rem; margin: 0; }
+  .bottom { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+  .proves { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .go { font-weight: 900; display: inline-flex; gap: 8px; }
+  .go .arrow { transition: transform 0.3s var(--ease); }
+  .card:hover .go .arrow { transform: translateX(6px); }
+  .card:hover { transform: translateY(-4px); }
+</style>

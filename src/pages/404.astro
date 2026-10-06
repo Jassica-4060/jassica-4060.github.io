@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="找不到頁面">
+  <section class="wrap nf">
+    <p class="big" aria-hidden="true">404</p>
+    <h1>這一頁不存在。</h1>
+    <p>可能是網址打錯了，或頁面已經移動。</p>
+    <a class="btn" href="/">回到首頁 <span class="arrow" aria-hidden="true">→</span></a>
+  </section>
+</Base>
+<style>
+  .nf { padding-block: clamp(64px, 12vw, 160px); }
+  .big { font-family: var(--font-display); font-size: clamp(7rem, 24vw, 18rem); line-height: 1; margin: 0; color: var(--accent); -webkit-text-stroke: 3px var(--ink); }
+  h1 { font-size: clamp(2rem, 5vw, 3.6rem); margin: 16px 0; }
+</style>

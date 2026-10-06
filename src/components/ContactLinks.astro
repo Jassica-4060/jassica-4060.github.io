@@ -1,0 +1,32 @@
+---
+import { profile } from '../data/profile';
+const { tone = 'dark' } = Astro.props as { tone?: 'dark' | 'light' };
+---
+<ul class:list={['contacts', tone]}>
+  {profile.contacts.map((c) => (
+    <li>
+      {c.url ? (
+        <a class="contact" href={c.url} target="_blank" rel="noopener">
+          {c.label}<span class="arrow" aria-hidden="true">↗</span>
+          <span class="sr-only">（另開新視窗）</span>
+        </a>
+      ) : (
+        <span class="contact pending">{c.label}<small>連結待補</small></span>
+      )}
+    </li>
+  ))}
+</ul>
+
+<style>
+  .contacts { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+  .contact {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: 999px; border: 2px solid currentColor;
+    font-weight: 700; text-decoration: none; transition: background 0.2s, color 0.2s, transform 0.3s var(--ease);
+  }
+  a.contact:hover { transform: translateY(-3px); }
+  .dark a.contact:hover { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+  .light a.contact:hover { background: var(--ink); color: var(--paper); }
+  .pending { border-style: dashed; opacity: 0.85; cursor: default; }
+  .pending small { font-size: 0.75rem; font-weight: 500; }
+</style>

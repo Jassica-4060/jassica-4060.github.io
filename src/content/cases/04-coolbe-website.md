@@ -7,6 +7,12 @@ duration: 2 季
 role: 獨立負責網站設計與部署執行
 proves: [完整交付, 網站設計]
 summary: 將網站設計落實成可在線上瀏覽的成果，呈現從設計到部署的完整執行能力。
+category: 網頁設計
+kind: 企業官網
+date: "2024.10"
+skills: [RWD, 網站規劃, 前端部署]
+cover: /covers/coolbe-website.svg
+template: true
 ---
 
 ## 背景與問題

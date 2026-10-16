@@ -7,6 +7,12 @@ duration: 1 季
 role: 負責 LOGO 設計及 Design System 從 0 到 1 的建立
 proves: [Design System, 品牌識別, 系統化思維]
 summary: 如何從品牌視覺延伸到介面規範，建立可持續使用與擴充的設計基礎。
+category: 產品設計
+kind: Design System
+date: "2025.06"
+skills: [Design System, Design Token, Figma Variables]
+cover: /covers/design-system.svg
+template: true
 ---
 
 ## 背景與問題

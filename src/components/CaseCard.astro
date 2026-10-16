@@ -24,19 +24,21 @@ const num = String(d.order).padStart(2, '0');
 
 <style>
   .card {
+    /* 100% 滿版：卡片貼齊視窗兩側，內容左右內距對齊 .wrap 的內容寬度 */
     position: relative; overflow: hidden; isolation: isolate;
-    border-radius: calc(var(--radius) * 1.4);
-    padding: clamp(24px, 4vw, 56px);
+    width: 100%;
+    padding-block: clamp(40px, 6vw, 88px);
+    padding-inline: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
+    border-top: 2px solid var(--ink);
     display: flex; flex-direction: column; gap: 16px;
-    transition: transform 0.5s var(--ease);
   }
   .card.lg { min-height: min(72vh, 620px); justify-content: space-between; }
   .card.sm { min-height: 360px; }
   .ink { background: var(--ink); color: var(--paper); }
   .accent { background: var(--accent); color: var(--ink); }
-  .paper { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); }
+  .paper { background: var(--paper); color: var(--ink); }
 
-  .hit { position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+  .hit { position: absolute; inset: 0; z-index: 2; }
   .hit:focus-visible { outline-offset: -6px; }
 
   .num {
@@ -60,5 +62,4 @@ const num = String(d.order).padStart(2, '0');
   .go { font-weight: 900; display: inline-flex; gap: 8px; }
   .go .arrow { transition: transform 0.3s var(--ease); }
   .card:hover .go .arrow { transform: translateX(6px); }
-  .card:hover { transform: translateY(-4px); }
 </style>

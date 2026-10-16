@@ -4,7 +4,10 @@ import Lenis from 'lenis';
 
 const root = document.documentElement;
 root.classList.remove('no-js');
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// 擷取到 Figma 時（網址帶 #figmacapture）也以靜態呈現，避免內容停在淡入前的狀態
+const capturing = location.hash.includes('figmacapture');
+if (capturing) root.classList.add('is-capturing');
+const reduce = capturing || matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* 平滑捲動（參考 jonprinzdesigns.com 的滑動感） */
 if (!reduce) {

@@ -431,6 +431,12 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 900; }
   .team-node strong { font-size: 20px; margin-bottom: 6px; }
 }
 
+/* 全寬設計稿截圖（附圖說） */
+.shot { margin: 1.4em 0 1.8em; }
+.shot.is-narrow { max-width: 760px; }
+.shot img { display: block; width: 100%; height: auto; border-radius: var(--radius); border: 2px solid var(--line); background: #fff; }
+.shot figcaption { margin-top: 8px; font-size: 0.85rem; color: var(--ink-soft); }
+
 /* 表頭 icon */
 .th-ico { display: inline-flex; align-items: center; gap: 4px; }
 .th-ico img { flex: none; }

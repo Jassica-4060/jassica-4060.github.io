@@ -1,0 +1,57 @@
+<style>
+  body { margin: 0; font: 13px/1.6 Inter, 'Noto Sans TC', system-ui, sans-serif; color: var(--figma-color-text, #222); background: var(--figma-color-bg, #fff); }
+  main { padding: 16px; display: grid; gap: 12px; }
+  h1 { font-size: 14px; margin: 0; }
+  p { margin: 0; }
+  .muted { color: var(--figma-color-text-secondary, #666); font-size: 12px; }
+  .warn { padding: 10px 12px; border-radius: 6px; background: #fff4d6; color: #5a4400; }
+  .err { padding: 10px 12px; border-radius: 6px; background: #ffe2e0; color: #8a1c13; }
+  .row { display: flex; gap: 8px; justify-content: flex-end; }
+  button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--figma-color-border, #ccc); background: transparent; color: inherit; cursor: pointer; }
+  button.primary { background: var(--figma-color-bg-brand, #0d99ff); border-color: transparent; color: #fff; }
+  textarea { width: 100%; height: 130px; box-sizing: border-box; font: 11px/1.4 ui-monospace, monospace; }
+  [hidden] { display: none !important; }
+</style>
+<main>
+  <section id="confirm" hidden>
+    <h1>產生／更新作品集設計稿</h1>
+    <p id="title"></p>
+    <p id="clear" class="warn"></p>
+    <p class="muted">共 4 張 Desktop 1440 稿，全部 Auto Layout。網站內容版本：<span id="built"></span>。可以用 ⌘Z 復原。</p>
+    <div class="row"><button id="cancel">取消</button><button id="go" class="primary">開始產生</button></div>
+  </section>
+  <section id="busy" hidden><p>產生中，請稍候（約 5～20 秒）…</p></section>
+  <section id="export" hidden>
+    <h1>匯出內容（回推網頁用）</h1>
+    <p class="muted">按「複製」後，直接貼到和 Claude 的對話裡；或下載成檔案放進專案的 figma-plugin 資料夾。</p>
+    <textarea id="json" readonly></textarea>
+    <div class="row"><button id="close">關閉</button><button id="dl">下載 JSON</button><button id="copy" class="primary">複製</button></div>
+  </section>
+  <section id="error" hidden><p class="err" id="errText"></p><div class="row"><button id="close2">關閉</button></div></section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const show = (id) => ['confirm', 'busy', 'export', 'error'].forEach((s) => ($(s).hidden = s !== id));
+  const send = (type) => parent.postMessage({ pluginMessage: { type } }, '*');
+  onmessage = (e) => {
+    const m = e.data.pluginMessage;
+    if (!m) return;
+    if (m.type === 'confirm') { $('title').textContent = m.title; $('clear').textContent = m.clear; $('built').textContent = new Date(m.built).toLocaleString('zh-TW'); show('confirm'); }
+    if (m.type === 'busy') show('busy');
+    if (m.type === 'export') { $('json').value = m.json; show('export'); }
+    if (m.type === 'error') { $('errText').textContent = '❌ ' + m.text; show('error'); }
+  };
+  $('go').onclick = () => send('go');
+  $('cancel').onclick = $('close').onclick = $('close2').onclick = () => send('close');
+  $('copy').onclick = () => {
+    $('json').select();
+    document.execCommand('copy');
+    $('copy').textContent = '已複製 ✓';
+  };
+  $('dl').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([$('json').value], { type: 'application/json' }));
+    a.download = 'figma-export.json';
+    a.click();
+  };
+</script>

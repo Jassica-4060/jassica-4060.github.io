@@ -5,7 +5,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "lock-about": "node scripts/lock-about.mjs"
+    "lock-about": "node scripts/lock-about.mjs",
+    "figma": "node figma-plugin/build.mjs"
   },
   "type": "module",
   "dependencies": {

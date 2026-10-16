@@ -7,6 +7,12 @@ duration: 2 週
 role: 主視覺設計負責人
 proves: [視覺設計, 品牌溝通]
 summary: 將活動與產品訊息轉化為視覺概念，並呈現最終應用成果。
+category: 平面設計
+kind: 活動主視覺
+date: "2025.09"
+skills: [主視覺, Illustrator, Photoshop]
+cover: /covers/forum-kv.svg
+template: true
 ---
 
 ## 背景與問題

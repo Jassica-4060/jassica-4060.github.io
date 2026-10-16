@@ -23,6 +23,17 @@ const fullTitle = title ? `${title}｜${profile.name} ${profile.nameEn}` : `${pr
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    {import.meta.env.DEV && (
+      // 只在本機預覽、且網址帶 #figmacapture 時載入 Figma 擷取工具（正式網站不會有）
+      <script is:inline>
+        if (location.hash.includes('figmacapture')) {
+          const s = document.createElement('script');
+          s.src = 'https://mcp.figma.com/mcp/html-to-design/capture.js';
+          s.async = true;
+          document.head.appendChild(s);
+        }
+      </script>
+    )}
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到主要內容</a>

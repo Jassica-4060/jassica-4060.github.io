@@ -1,98 +1,143 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import CaseCard from '../components/CaseCard.astro';
+import WorkCard from '../components/WorkCard.astro';
 import ContactLinks from '../components/ContactLinks.astro';
-import Logo from '../assets/logo.svg';
 import { profile } from '../data/profile';
 
 const cases = (await getCollection('cases', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
-const main = cases.filter((c) => c.data.tier === 'main');
-const side = cases.filter((c) => c.data.tier === 'side');
-const variants = ['ink', 'accent', 'paper'] as const;
-const marquee = '需求收斂 ✦ 產品設計 ✦ Design System ✦ 跨部門溝通 ✦ ';
+const tabs = [
+  { key: 'product', label: '產品設計' },
+  { key: 'graphic', label: '平面設計' },
+  { key: 'web', label: '網頁設計' },
+] as const;
+const byTab = tabs.map((t) => ({ ...t, items: cases.filter((c) => c.data.category === t.label) }));
+// 角色卡單色 icon（顏色跟著文字色 currentColor）
+const roleIcons = [
+  // PM：清單板
+  '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="8" width="28" height="34" rx="3"/><path d="M18 8V5h12v3"/><path d="m16 20 3 3 5-6M28 21h4M16 31l3 3 5-6M28 32h4"/></svg>',
+  // UI/UX：視窗＋游標
+  '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="38" height="28" rx="3"/><path d="M5 15h38M10 11.5h.01M14 11.5h.01"/><path d="m26 24 13 5-6 2-2 6z" fill="currentColor"/></svg>',
+  // Design：鋼筆筆尖
+  '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6 12 22l12 20 12-20z"/><path d="M24 42V27"/><circle cx="24" cy="24" r="3"/><path d="M6 42h36"/></svg>',
+];
 ---
 <Base>
-  <!-- ① Hero：10 秒內回答「我是誰」 -->
+  <!-- ① 主視覺：置中大標＋漂浮標籤（版型參考 tingyilin.com/work） -->
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-logo" data-speed="0.25" aria-hidden="true"><Logo /></div>
     <div class="wrap hero-inner">
-      <p class="eyebrow">{profile.name}・{profile.title}・{profile.location}</p>
+      <p class="eyebrow">{profile.name}・{profile.nameEn}</p>
       <h1 id="hero-title">
-        <span class="line">我把混亂的需求，</span>
-        <span class="line typed">
-          <span class="sr-only">{profile.typewriter.join(' ')}</span>
-          <span data-typewriter={JSON.stringify(profile.typewriter)} aria-hidden="true">{profile.typewriter[0]}</span><span class="caret" aria-hidden="true"></span>
-        </span>
+        <span class="hero-small">Hi, I’m a</span>
+        <span class="hero-big">Product<br />Designer</span>
       </h1>
-      <p class="lead">{profile.positioning}{profile.intro}</p>
-      <ul class="keywords" aria-label="核心關鍵字">
-        {profile.keywords.map((k) => <li class="tag">{k}</li>)}
-      </ul>
+      <span class="float f1" aria-hidden="true">PM</span>
+      <span class="float f2" aria-hidden="true">UI / UX</span>
+      <span class="float f3" aria-hidden="true">Visual Design</span>
+      <p class="hero-sub">
+        我把混亂的需求，
+        <span class="sr-only">{profile.typewriter.join(' ')}</span>
+        <span class="typed" data-typewriter={JSON.stringify(profile.typewriter)} aria-hidden="true">{profile.typewriter[0]}</span><span class="caret" aria-hidden="true"></span>
+      </p>
       <div class="actions">
-        <a class="btn" href="#work">看精選作品 <span class="arrow" aria-hidden="true">↓</span></a>
+        <a class="btn" href="#work">看作品 <span class="arrow" aria-hidden="true">↓</span></a>
         <a class="btn btn--ghost" href="#contact">聯絡我／履歷</a>
       </div>
     </div>
   </section>
 
-  <!-- 捲動帶動的超大裝飾字 -->
-  <div class="band" aria-hidden="true">
-    <p class="band-text" data-marquee="left">{marquee.repeat(4)}</p>
-  </div>
+  <!-- ② 簡單自我介紹＋拼貼照片 -->
+  <section id="intro" class="intro" aria-labelledby="intro-title">
+    <div class="wrap">
+      <div class="intro-grid">
+        <div class="intro-text reveal">
+          <p class="eyebrow">{profile.about.eyebrow}</p>
+          <h2 id="intro-title">{profile.about.heading.split('\n').map((l) => <span class="line">{l}</span>)}</h2>
+          {profile.about.body.map((p) => <p>{p}</p>)}
+        </div>
+        <figure class="portrait reveal">
+          {profile.about.photo.src
+            ? <img src={profile.about.photo.src} alt={profile.about.photo.alt} loading="lazy" />
+            : <span class="photo-ph">個人照片<br />（建議 4:5 直式）</span>}
+        </figure>
+      </div>
 
-  <!-- ② 精選作品 -->
+    </div>
+
+    <!-- ③ 三張角色卡：左 PM、中 UI/UX、右 Design，滿版；預設只顯示大標＋裝飾英文，Hover 出現 icon 與內文 -->
+    <ol class="roles" aria-label="我的三種角色">
+      {profile.roles.map((r, i) => (
+        <li class={`role role--${i}`} tabindex="0">
+          <span class="role-deco" aria-hidden="true">{r.en}</span>
+          <div class="role-inner">
+            <div class="reveal-box"><div><span class="role-icon" aria-hidden="true" set:html={roleIcons[i]} /></div></div>
+            <h3 class="role-key">{r.key}</h3>
+            <div class="reveal-box"><div class="role-detail">
+              <p class="role-title">{r.title}</p>
+              <p>{r.body}</p>
+              <ul class="role-tags" aria-label="亮點技能">
+                {r.highlights.map((h) => <li class="tag">{h}</li>)}
+              </ul>
+            </div></div>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- ④ 工作方式 -->
+  <!-- 卡片疊成一疊，往下捲動時最上面那張被抽走（參考 tingyilin.com/home 的 Voice(s) of Trust）；
+       不支援動效時退回三欄並排 -->
+  <section id="approach" class="approach" aria-labelledby="approach-title" data-deck>
+    <div class="approach-sticky">
+      <div class="wrap">
+        <header class="sec-head center reveal">
+          <p class="eyebrow">How I Work</p>
+          <h2 id="approach-title" class="quote">{profile.philosophy}</h2>
+        </header>
+        <ol class="traits">
+          {profile.traits.map((t, i) => (
+            <li class="trait reveal" style={`transition-delay:${i * 120}ms`}>
+              <span class="trait-num" aria-hidden="true">0{i + 1}</span>
+              <span class="trait-en">{t.en}</span>
+              <h3>{t.name}</h3>
+              <p>{t.body}</p>
+            </li>
+          ))}
+        </ol>
+        <p class="deck-count" aria-hidden="true"><span data-deck-current>01</span> / {String(profile.traits.length).padStart(2, '0')}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑤ 作品：Tab 切換 產品設計／平面設計／網頁設計 -->
   <section id="work" class="work" aria-labelledby="work-title">
     <div class="wrap">
-      <header class="sec-head reveal">
+      <header class="sec-head center reveal">
         <p class="eyebrow">Selected Work</p>
-        <h2 id="work-title">精選作品</h2>
-        <p>三個主案例展示我如何收斂需求、交付規格與建立設計系統；其他作品補強視覺與完整交付能力。</p>
+        <h2 id="work-title">作品</h2>
       </header>
 
-      <div class="stack">
-        {main.map((entry, i) => (
-          <div class="stack-item" style={`--i:${i}`}>
-            <CaseCard entry={entry} index={i} variant={variants[i % 3]} />
-          </div>
+      <div class="tabs" role="tablist" aria-label="作品分類">
+        {byTab.map((t, i) => (
+          <button class="tab" role="tab" id={`tab-${t.key}`} aria-controls={`panel-${t.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+            {t.label}<span class="count">{t.items.length}</span>
+          </button>
         ))}
       </div>
 
-      <h3 class="side-title reveal">其他作品<span>補強視覺與完整交付</span></h3>
-      <div class="side-grid">
-        {side.map((entry, i) => (
-          <div class="reveal" style={`transition-delay:${i * 120}ms`}>
-            <CaseCard entry={entry} index={i} variant={i % 2 ? 'accent' : 'paper'} size="sm" />
-          </div>
-        ))}
-      </div>
+      {byTab.map((t, i) => (
+        <div class="panel" role="tabpanel" id={`panel-${t.key}`} aria-labelledby={`tab-${t.key}`} hidden={i !== 0}>
+          <h3 class="panel-title">{t.label}</h3>
+          {t.items.length
+            ? <ul class="work-list">{t.items.map((entry) => <li><WorkCard entry={entry} /></li>)}</ul>
+            : <p class="empty">作品整理中，敬請期待。</p>}
+        </div>
+      ))}
     </div>
   </section>
 
-  <!-- ③ 工作方式：設計理念與特質 -->
-  <section id="approach" class="approach" aria-labelledby="approach-title">
-    <div class="wrap">
-      <header class="sec-head reveal">
-        <p class="eyebrow">How I Work</p>
-        <h2 id="approach-title">工作方式</h2>
-      </header>
-      <blockquote class="quote">
-        <p data-speed="0.08">「{profile.philosophy}」</p>
-      </blockquote>
-      <ol class="traits">
-        {profile.traits.map((t, i) => (
-          <li class="trait reveal" style={`transition-delay:${i * 120}ms`}>
-            <span class="trait-en">{t.en}</span>
-            <h3>{t.name}</h3>
-            <p>{t.body}</p>
-          </li>
-        ))}
-      </ol>
-      <p class="difference reveal">{profile.difference}</p>
-    </div>
-  </section>
-
-  <!-- ④ 聯絡 -->
+  <!-- ⑥ 聯絡 -->
   <section id="contact" class="contact" aria-labelledby="contact-title">
     <div class="band band--dark" aria-hidden="true">
       <p class="band-text" data-marquee="right">LET’S TALK ✦ LET’S TALK ✦ LET’S TALK ✦ LET’S TALK ✦ LET’S TALK ✦ </p>
@@ -106,63 +151,243 @@ const marquee = '需求收斂 ✦ 產品設計 ✦ Design System ✦ 跨部門�
   </section>
 </Base>
 
-<style>
-  /* Hero */
-  .hero { position: relative; overflow: hidden; min-height: calc(100svh - 68px); display: grid; align-items: center; padding-block: clamp(48px, 8vh, 96px); }
-  .hero-logo {
-    position: absolute; right: -6vw; top: 8%; width: min(70vw, 900px); z-index: 0;
-    color: var(--ink); opacity: 0.07; pointer-events: none;
-    --logo-fill: transparent;
+<script>
+  // 作品 Tab：點擊或左右鍵切換
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.tab')];
+  const select = (tab: HTMLButtonElement, focus = false) => {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      const panel = document.getElementById(t.getAttribute('aria-controls')!)!;
+      panel.hidden = !on;
+      if (on) panel.querySelectorAll('.work-list > li').forEach((li, i) => {
+        li.animate([{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 600, delay: i * 90, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' });
+      });
+    }
+    if (focus) tab.focus();
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); select(tabs[(i + d + tabs.length) % tabs.length], true); }
+    });
+  });
+
+  // 工作方式疊卡：往下捲動，最上面那張依序被抽走（左、右交替），露出下一張
+  const deck = document.querySelector<HTMLElement>('[data-deck]');
+  const still = location.hash.includes('figmacapture') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (deck && !still) {
+    const cards = [...deck.querySelectorAll<HTMLElement>('.trait')];
+    const counter = deck.querySelector<HTMLElement>('[data-deck-current]');
+    const n = cards.length;
+    const tilt = [-2, 3, -4, 2]; // 疊在下面時的歪斜角度（度）
+    deck.style.setProperty('--n', String(n));
+    deck.classList.add('is-deck');
+    cards.forEach((c, i) => { c.style.zIndex = String(n - i); });
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const r = deck.getBoundingClientRect();
+      const range = r.height - innerHeight;
+      const raw = Math.min(Math.max(-r.top / range, 0), 1);
+      // 前後各留 12% 停頓，中間的捲動距離用來抽走 n-1 張
+      const p = Math.min(Math.max((raw - 0.12) / 0.76, 0), 1) * (n - 1);
+      cards.forEach((c, i) => {
+        const out = Math.min(Math.max(p - i, 0), 1); // 0 = 還在疊上，1 = 已抽走
+        const depth = Math.max(i - p, 0);           // 0 = 最上面那張
+        const dir = i % 2 ? 1 : -1;
+        const ease = out * out * (3 - 2 * out);
+        const x = dir * ease * 110;                  // 往左／右抽出的距離（vw）
+        const rot = tilt[i % tilt.length] * Math.min(depth, 1) + dir * ease * 18;
+        const scale = 1 - Math.min(depth, 2) * 0.05;
+        c.style.transform = `translate(${x.toFixed(2)}vw, calc(${(depth * 18).toFixed(1)}px - ${(ease * 12).toFixed(2)}vh)) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+        c.style.opacity = String(1 - ease * 0.4);
+      });
+      if (counter) counter.textContent = String(Math.min(Math.round(p) + 1, n)).padStart(2, '0');
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', onScroll);
+    update();
   }
-  .hero-inner { position: relative; z-index: 1; }
-  .hero h1 { margin: 24px 0 28px; font-size: clamp(2.3rem, 7.4vw, 6.6rem); line-height: 1.12; letter-spacing: -0.01em; }
-  .line { display: block; }
-  .typed { color: var(--ink); min-height: 1.12em; }
-  .typed [data-typewriter] { background: linear-gradient(transparent 62%, var(--accent) 62%); }
+</script>
+
+<style>
+  /* ① 主視覺 */
+  .hero { position: relative; overflow: hidden; min-height: calc(100svh - 68px); display: grid; align-items: center; padding-block: clamp(48px, 8vh, 96px); }
+  .hero-inner { position: relative; display: grid; justify-items: center; text-align: center; gap: 24px; }
+  .hero h1 { display: grid; justify-items: center; margin: 8px 0; }
+  .hero-small { font-size: clamp(1rem, 1.6vw, 1.4rem); font-weight: 700; letter-spacing: 0.04em; }
+  .hero-big { font-family: var(--font-display); font-weight: 400; font-size: clamp(3.4rem, 12vw, 10.5rem); line-height: 0.95; letter-spacing: -0.03em; }
+  .float {
+    position: absolute; z-index: 1; padding: 10px 22px; border-radius: 999px; border: 2px solid var(--ink);
+    font-weight: 900; font-size: clamp(0.9rem, 1.4vw, 1.25rem); white-space: nowrap;
+    animation: float 6s ease-in-out infinite;
+  }
+  .f1 { top: 12%; left: 16%; background: var(--ink); color: var(--paper); rotate: -6deg; }
+  .f2 { top: 30%; right: 12%; background: var(--accent); rotate: 5deg; animation-delay: -2s; }
+  .f3 { top: 50%; left: 8%; background: var(--paper); rotate: -3deg; animation-delay: -4s; }
+  @keyframes float { 50% { translate: 0 -14px; } }
+  @media (max-width: 760px) {
+    .f1 { top: 4%; left: 4%; } .f2 { top: 8%; right: 4%; } .f3 { top: auto; bottom: 26%; left: 6%; }
+  }
+  .hero-sub { margin: 0; font-size: clamp(1.1rem, 1.8vw, 1.6rem); font-weight: 700; min-height: 1.75em; }
+  .typed { background: linear-gradient(transparent 62%, var(--accent) 62%); }
   .caret { display: inline-block; width: 0.08em; height: 0.9em; margin-left: 0.06em; background: var(--ink); vertical-align: -0.08em; animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-  @media (max-width: 760px) { .typed { min-height: 2.24em; } }
-  .lead { max-width: 40em; font-size: clamp(1rem, 1.2vw + 0.6rem, 1.2rem); color: var(--ink-soft); }
-  .keywords { list-style: none; padding: 0; margin: 0 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-
-  /* 超大裝飾字帶 */
-  .band { background: var(--accent); overflow: hidden; padding-block: 8px; border-block: 2px solid var(--ink); }
-  .band--dark { background: var(--ink); color: var(--accent); border-color: var(--ink); }
-  .band-text {
-    margin: 0; white-space: nowrap; width: max-content; will-change: transform;
-    font-family: var(--font-display); font-weight: 900; line-height: 1.15;
-    font-size: clamp(3rem, 10vw, 9rem); letter-spacing: -0.02em;
-  }
+  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 
   /* 段落標題 */
-  .sec-head { margin-bottom: clamp(32px, 6vw, 72px); max-width: 44em; }
-  .sec-head h2 { font-size: clamp(2.6rem, 8vw, 6.4rem); margin: 12px 0 16px; letter-spacing: -0.02em; }
-  .sec-head p:last-child { color: var(--ink-soft); }
+  .sec-head { margin-bottom: clamp(32px, 5vw, 64px); max-width: 44em; }
+  .sec-head.center { margin-inline: auto; text-align: center; display: grid; justify-items: center; }
+  .sec-head h2 { font-size: clamp(2.4rem, 6vw, 4.8rem); margin: 12px 0 0; letter-spacing: -0.02em; }
 
-  /* 作品：疊卡效果 */
-  .work { padding-block: clamp(72px, 12vw, 160px); }
-  .stack { display: grid; gap: 24px; }
-  .stack-item { position: sticky; top: calc(88px + var(--i) * 28px); }
-  .side-title { margin: clamp(64px, 10vw, 120px) 0 24px; font-size: clamp(1.6rem, 3vw, 2.4rem); display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
-  .side-title span { font-size: 1rem; font-weight: 700; color: var(--ink-soft); }
-  .side-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; }
-  @media (max-width: 720px) { .stack-item { position: static; } }
+  /* ② 自我介紹 */
+  .intro { padding-block: clamp(72px, 10vw, 140px); border-top: 2px solid var(--ink); }
+  .intro-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(32px, 6vw, 96px); align-items: center; }
+  .intro-text h2 { font-size: clamp(1.8rem, 3.4vw, 3rem); margin: 16px 0 24px; letter-spacing: -0.01em; }
+  .intro-text h2 .line { display: block; text-wrap: balance; }
+  .intro-text h2 .line + .line { font-size: 0.6em; color: var(--ink-soft); margin-top: 12px; }
+  .intro-text p { color: var(--ink-soft); }
+  .portrait {
+    margin: 0; justify-self: center; width: min(100%, 440px); padding: 14px; background: var(--paper);
+    border: 2px solid var(--ink); border-radius: 14px; box-shadow: 10px 10px 0 var(--ink); rotate: 2deg;
+    transition: rotate 0.5s var(--ease);
+  }
+  .portrait:hover { rotate: 0deg; }
+  .portrait img, .photo-ph { display: grid; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 8px; }
+  .photo-ph {
+    place-items: center; text-align: center; font-size: 0.9rem; font-weight: 700; color: var(--ink-soft);
+    background: repeating-linear-gradient(-45deg, transparent 0 12px, var(--line) 12px 13px), color-mix(in srgb, var(--ink) 6%, var(--paper));
+  }
 
-  /* 工作方式 */
-  .approach { padding-block: clamp(72px, 12vw, 160px); border-top: 2px solid var(--ink); }
-  .quote { margin: 0 0 clamp(48px, 8vw, 96px); }
-  .quote p { margin: 0; text-wrap: balance; font-size: clamp(2rem, 6vw, 5.2rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.01em; }
-  .traits { list-style: none; padding: 0; margin: 0 0 clamp(48px, 8vw, 96px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 24px; }
-  .trait { border-top: 6px solid var(--ink); padding-top: 20px; }
-  .trait-en { font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); padding: 2px 8px; }
-  .trait h3 { font-size: 1.8rem; margin: 14px 0 10px; }
-  .trait p { color: var(--ink-soft); }
-  .difference { max-width: 44em; font-size: clamp(1.05rem, 1.4vw + 0.5rem, 1.35rem); font-weight: 500; }
+  /* ③ 角色卡：滿版三欄，Hover 展開 */
+  .intro { padding-bottom: 0; }
+  .roles {
+    list-style: none; padding: 0; margin: clamp(72px, 10vw, 140px) 0 0; display: flex;
+    height: calc(100svh - 68px); min-height: 560px; border-top: 2px solid var(--ink);
+  }
+  .role {
+    position: relative; overflow: hidden; flex: 1 1 0; min-width: 0; display: flex; align-items: center;
+    padding: clamp(24px, 3vw, 48px); outline: none; cursor: default; container-type: inline-size;
+    transition: flex-grow 0.7s var(--ease);
+  }
+  .role + .role { border-left: 2px solid var(--ink); }
+  .role { color: var(--fg); }
+  .role--0 { background: var(--paper); --fg: var(--ink); }
+  .role--1 { background: var(--accent); --fg: var(--ink); }
+  .role--2 { background: var(--ink); --fg: var(--paper); }
+  .role-deco {
+    position: absolute; left: clamp(16px, 2vw, 32px); right: 16px; bottom: clamp(12px, 2vw, 28px);
+    font-family: var(--font-display); font-size: min(4.6rem, 11cqi); line-height: 0.92; letter-spacing: -0.02em;
+    color: transparent; -webkit-text-stroke: 1.5px var(--fg); opacity: 0.5; pointer-events: none;
+    transition: opacity 0.5s var(--ease), translate 0.7s var(--ease);
+  }
+  .role-inner { position: relative; z-index: 1; width: 100%; display: grid; justify-items: start; }
+  .role-key { font-family: var(--font-display); font-weight: 400; font-size: min(7.2rem, 19cqi); line-height: 1; letter-spacing: -0.02em; transition: font-size 0.6s var(--ease); }
+  .reveal-box { display: grid; grid-template-rows: 0fr; width: 100%; transition: grid-template-rows 0.6s var(--ease); }
+  .reveal-box > div { overflow: hidden; min-height: 0; opacity: 0; translate: 0 16px; transition: opacity 0.4s var(--ease), translate 0.6s var(--ease); }
+  .role-icon { display: block; width: clamp(48px, 4.4vw, 68px); margin-bottom: 20px; }
+  .role-icon :global(svg) { width: 100%; height: auto; }
+  .role-detail { display: grid; gap: 12px; max-width: 30em; padding-top: 20px; }
+  .role-title { margin: 0; font-size: clamp(1.1rem, 1.5vw, 1.4rem); font-weight: 900; line-height: 1.4; }
+  .role-detail p { margin: 0; }
+  .role-detail > p:not(.role-title) { opacity: 0.85; }
+  .role-tags { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
 
-  /* 聯絡 */
+  /* 展開狀態：滑鼠 Hover 或鍵盤聚焦 */
+  .role:hover, .role:focus-visible { flex-grow: 1.7; }
+  .role:focus-visible { box-shadow: inset 0 0 0 4px var(--accent); }
+  .role--1:focus-visible { box-shadow: inset 0 0 0 4px var(--ink); }
+  .role:hover .reveal-box, .role:focus-visible .reveal-box { grid-template-rows: 1fr; }
+  .role:hover .reveal-box > div, .role:focus-visible .reveal-box > div { opacity: 1; translate: 0 0; transition-delay: 0.15s; }
+  .role:hover .role-key, .role:focus-visible .role-key { font-size: min(4.4rem, 12cqi); }
+  .role:hover .role-deco, .role:focus-visible .role-deco { opacity: 0.14; translate: 0 12px; }
+
+  /* 觸控裝置沒有 Hover：直接顯示全部內容 */
+  @media (hover: none) {
+    .reveal-box { grid-template-rows: 1fr; }
+    .reveal-box > div { opacity: 1; translate: 0 0; }
+    .role-deco { opacity: 0.14; }
+  }
+
+  /* ④ 工作方式 */
+  .approach { padding-block: clamp(72px, 10vw, 140px); background: var(--ink); color: var(--paper); }
+  .approach .quote { font-size: clamp(2rem, 5.4vw, 4.4rem); text-wrap: balance; }
+  .approach .quote::before { content: '「'; }
+  .approach .quote::after { content: '」'; }
+  .traits { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .trait { position: relative; overflow: hidden; padding: clamp(24px, 2.6vw, 36px); border-radius: var(--radius); background: var(--paper); color: var(--ink); }
+  .trait-num { position: absolute; right: 16px; top: 4px; font-family: var(--font-display); font-size: 4.5rem; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px var(--ink); opacity: 0.25; }
+  .trait-en { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); padding: 2px 8px; }
+  .trait h3 { font-size: 1.6rem; margin: 16px 0 10px; }
+  .trait p { margin: 0; color: var(--ink-soft); }
+  .deck-count { display: none; }
+
+  /* 疊卡模式（JS 啟用）：區塊拉長、內容黏在畫面上，捲動距離換成抽卡進度 */
+  .approach.is-deck { height: calc(100svh + var(--n, 3) * 60svh); padding-block: 0; }
+  .is-deck .approach-sticky {
+    position: sticky; top: 68px; height: calc(100svh - 68px); overflow: hidden;
+    display: flex; align-items: center; padding-block: clamp(24px, 4vh, 48px);
+  }
+  .is-deck .sec-head { margin-bottom: clamp(24px, 4vh, 48px); }
+  .is-deck .quote { font-size: clamp(1.8rem, 4.4vw, 3.6rem); }
+  .approach.is-deck .traits {
+    display: grid; grid-template-columns: 1fr; justify-items: center;
+    overflow: visible; margin: 0; padding: 0;
+  }
+  .approach.is-deck .trait {
+    grid-area: 1 / 1; width: min(560px, 100%); flex: none;
+    padding: clamp(28px, 3.6vw, 48px); box-shadow: 0 24px 48px rgb(0 0 0 / 0.28);
+    opacity: 1; transition: none; will-change: transform;
+  }
+  .is-deck .trait h3 { font-size: clamp(1.8rem, 2.6vw, 2.4rem); }
+  .is-deck .trait p { font-size: 1.05rem; }
+  .is-deck .deck-count {
+    display: block; margin: clamp(20px, 3vh, 32px) 0 0; text-align: center;
+    font-family: var(--font-display); letter-spacing: 0.1em; color: var(--accent);
+  }
+
+  /* ⑤ 作品 */
+  .work { padding-block: clamp(72px, 10vw, 140px); }
+  .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: clamp(32px, 5vw, 56px); }
+  .tab {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 999px;
+    border: 2px solid var(--ink); background: transparent; color: var(--ink); font: inherit; font-weight: 700; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .tab:hover { background: var(--accent); }
+  .tab[aria-selected='true'] { background: var(--ink); color: var(--paper); }
+  .count { font-size: 0.75rem; min-width: 22px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, currentColor 18%, transparent); }
+  .panel-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .work-list { list-style: none; padding: 0; margin: 0 auto; max-width: 1080px; display: grid; gap: 24px; }
+  .empty { text-align: center; color: var(--ink-soft); }
+  :global(.no-js) .panel[hidden] { display: block; }
+  :global(.no-js) .panel-title { position: static; width: auto; height: auto; clip: auto; margin: 32px 0 16px; }
+
+  /* ⑥ 聯絡 */
+  .band { overflow: hidden; padding-block: 8px; }
+  .band--dark { background: var(--ink); color: var(--accent); border-block: 2px solid var(--paper); }
+  .band-text { margin: 0; white-space: nowrap; width: max-content; will-change: transform; font-family: var(--font-display); font-weight: 900; line-height: 1.15; font-size: clamp(3rem, 10vw, 9rem); letter-spacing: -0.02em; }
   .contact { background: var(--ink); color: var(--paper); }
   .contact-inner { padding-block: clamp(72px, 12vw, 140px); display: grid; gap: 24px; justify-items: start; }
   .contact h2 { font-size: clamp(2.2rem, 6.4vw, 5.6rem); letter-spacing: -0.01em; }
   .contact-inner p { margin: 0; color: color-mix(in srgb, var(--paper) 85%, var(--ink)); }
+
+  @media (max-width: 460px) { .intro-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) {
+    /* 角色卡、工作方式卡：維持橫排，改成左右滑動 */
+    .roles, .traits { overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+    .roles::-webkit-scrollbar, .traits::-webkit-scrollbar { display: none; }
+    .roles { height: auto; min-height: 0; }
+    .role { flex: 0 0 82vw; min-height: 560px; scroll-snap-align: start; align-items: flex-start; }
+    .role:hover, .role:focus-visible { flex-grow: 0; }
+    .traits { display: flex; padding-bottom: 8px; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
+    .trait { flex: 0 0 min(78vw, 340px); scroll-snap-align: start; }
+  }
+  @media (prefers-reduced-motion: reduce) { .float { animation: none; } }
 </style>

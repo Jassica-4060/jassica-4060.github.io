@@ -1,0 +1,15 @@
+{
+  "name": "作品集 ↔ Figma 同步",
+  "id": "cmin-portfolio-sync-local",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] },
+  "menu": [
+    { "name": "① 產生／更新設計稿", "command": "build" },
+    { "name": "② 匯出內容（回推網頁用）", "command": "export" },
+    { "name": "③ 產生案例頁新版（不覆蓋舊稿）", "command": "case-new" }
+  ]
+}

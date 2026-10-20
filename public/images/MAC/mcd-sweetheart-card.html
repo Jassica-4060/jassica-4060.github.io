@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>數位甜心卡 Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --yellow:#FFBC0D;
+  --yellow-press:#F2AE00;
+  --red:#DA291C;
+  --ink:#1F1F1F;
+  --ink-2:#555;
+  --ink-3:#9A9A9A;
+  --line:#E6E6E6;
+  --tab-off:#EDEDED;
+  --disabled:#D6D6D6;
+  --card-shadow:0 2px 10px rgba(0,0,0,.07);
+  --stage:#F4F1EA;
+  --hot:rgba(24,119,242,.28);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:var(--stage);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+img{display:block;max-width:100%}
+
+/* ---------- 舞台：手機外框 ---------- */
+.stage{position:relative;flex:none}
+.device{
+  width:390px;height:844px;border-radius:54px;background:#111;padding:12px;
+  box-shadow:0 30px 60px rgba(0,0,0,.18),0 0 0 2px #2b2b2b inset;
+  transform-origin:center center;
+}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;overflow:clip;background:#fff;
+  isolation:isolate;
+}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:32px;border-radius:20px;background:#000;z-index:60}
+
+
+/* ---------- App 共用 ---------- */
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;
+  padding:6px 30px 0 34px;font-weight:600;font-size:16px;z-index:50;pointer-events:none
+}
+.statusbar .r{display:flex;gap:6px;align-items:center;font-size:14px}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;background:#fff;padding-top:50px}
+.view[hidden]{display:none}
+.view.enter{animation:viewIn .32s cubic-bezier(.2,.8,.2,1)}
+.view.enter-back{animation:viewBack .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes viewIn{from{transform:translateX(28%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes viewBack{from{transform:translateX(-20%);opacity:.4}to{transform:none;opacity:1}}
+
+.navbar{flex:none;background:#fff;position:relative;z-index:5}
+.navbar .back{height:40px;width:52px;display:flex;align-items:center;justify-content:center;margin-left:8px}
+.navbar .brand{height:44px;display:flex;align-items:center;padding:0 10px 0 8px;box-shadow:0 3px 6px -3px rgba(0,0,0,.08)}
+.navbar .brand img{height:28px;width:auto}
+.navbar .links{margin-left:auto;display:flex;gap:18px;font-size:11.5px;align-items:center}
+.navbar .links button{display:flex;gap:5px;align-items:center}
+.body{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+
+.tabbar{flex:none;height:84px;border-top:1px solid var(--line);display:flex;padding:8px 6px 0;background:#fff;position:relative;z-index:6}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink-2)}
+.tabbar button.on{color:var(--ink);font-weight:700}
+.tabbar svg{width:30px;height:30px}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:5px;background:#111;z-index:70;pointer-events:none}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;height:46px;border-radius:999px;background:var(--yellow);
+  font-size:17px;font-weight:700;letter-spacing:.08em;transition:transform .12s,background .2s,color .2s
+}
+.btn:active{transform:scale(.97);background:var(--yellow-press)}
+.btn.is-off{background:var(--disabled);color:#555;cursor:not-allowed}
+.btn.is-off:active{transform:none}
+
+/* ---------- 綁定首頁 ---------- */
+.banner{width:100%;aspect-ratio:924/500;object-fit:cover}
+.bind-hero{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:center;padding:30px 18px 26px 16px}
+.bind-hero .card{transform:rotate(-0deg);filter:drop-shadow(0 4px 6px rgba(0,0,0,.15))}
+.bind-hero h2{margin:0;text-align:center;font-size:22px;line-height:1.35;font-weight:900}
+.bind-hero h2 small{display:block;font-size:17px;font-weight:700}
+.bind-hero .btn{width:100%;margin:10px 0 12px;font-size:19px}
+.link{display:block;margin:0 auto;text-decoration:underline;text-underline-offset:4px;font-size:14px}
+.acc{border-top:1px solid #DCDCDC}
+.acc-item{border-bottom:1px solid #DCDCDC;background:#F6F6F6}
+.acc-item>button{width:100%;display:flex;justify-content:space-between;align-items:center;padding:13px 22px 13px 32px;font-size:16px;letter-spacing:.06em}
+.acc-item>button svg{transition:transform .25s}
+.acc-item.open>button svg{transform:rotate(90deg)}
+.acc-item .acc-c{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.acc-item.open .acc-c{grid-template-rows:1fr}
+.acc-item .acc-c>div{overflow:hidden}
+.acc-item .acc-c p{margin:0;padding:0 32px 14px;font-size:13px;color:var(--ink-2);line-height:1.7}
+
+/* ---------- 掃描 ---------- */
+.scan{position:absolute;inset:0;background:#1d1d1d;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:2}
+.scan::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#4a4a4a 0,#1d1d1d 70%)}
+.scan .close{position:absolute;top:60px;left:18px;z-index:2}
+.scan .frame{position:relative;width:230px;height:230px;z-index:1}
+.scan .frame i{position:absolute;width:38px;height:38px;border:4px solid var(--yellow)}
+.scan .frame i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0;border-top-left-radius:12px}
+.scan .frame i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0;border-top-right-radius:12px}
+.scan .frame i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0;border-bottom-left-radius:12px}
+.scan .frame i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-bottom-right-radius:12px}
+.scan .frame .qr{position:absolute;inset:40px;opacity:.85;background:
+  repeating-linear-gradient(90deg,#fff 0 9px,transparent 9px 18px),
+  repeating-linear-gradient(0deg,transparent 0 9px,#1d1d1d 9px 18px);filter:blur(.3px);border-radius:4px;mix-blend-mode:screen}
+.scan .frame .line{position:absolute;left:14px;right:14px;height:3px;border-radius:3px;background:var(--yellow);box-shadow:0 0 14px var(--yellow);animation:scanline 1.6s ease-in-out infinite alternate;top:14px}
+@keyframes scanline{to{top:calc(100% - 17px)}}
+.scan p{z-index:1;margin:26px 0 0;font-size:14px;text-align:center;line-height:1.7}
+.scan .ok{position:absolute;z-index:3;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;font-weight:700}
+.scan.done .ok{opacity:1}
+
+/* ---------- 手動輸入 ---------- */
+.form{padding:44px 38px 30px;display:flex;flex-direction:column;align-items:center}
+.form label{font-size:17px;font-weight:700;letter-spacing:.06em;margin-bottom:10px}
+.field{position:relative;width:100%;margin-bottom:30px}
+.field input{
+  width:100%;height:48px;border-radius:999px;border:1.5px solid var(--ink);text-align:center;font-size:20px;
+  font-family:inherit;letter-spacing:.06em;outline:none;padding:0 46px;background:#fff
+}
+#sn{padding:0 14px;font-size:19px;letter-spacing:.02em;word-spacing:-2px}
+.field input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(255,188,13,.25)}
+.field input::placeholder{color:#BDBDBD;font-size:15px;letter-spacing:.04em}
+.field .eye{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.field .err{position:absolute;left:0;right:0;top:52px;text-align:center;color:var(--red);font-size:12px}
+.form .btn{width:216px;margin-top:6px}
+
+/* ---------- 選餐 ---------- */
+/* 頁籤：灰色整條底在下層，選中的黃色頁籤較高、壓在灰色上方，底部帶波浪 */
+.zones{position:relative;display:flex;height:56px;margin-top:2px}
+.zones::before{content:"";position:absolute;left:0;right:0;top:7px;height:35px;background:var(--tab-off);z-index:0}
+.zone{flex:1;position:relative;height:42px;padding-top:7px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;letter-spacing:.06em;z-index:1}
+.zone .zl{position:relative;z-index:2}
+.zone .bg{position:absolute;inset:0;background:var(--yellow);opacity:0;transition:opacity .25s;z-index:1}
+.zone .bg::after{
+  content:"";position:absolute;left:0;right:0;top:calc(100% - 1px);height:16px;
+  background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath fill='%23FFBC0D' d='M0 0H200V2C180 2 165 4 150 8C132 13 118 16 100 16S68 13 50 8C35 4 20 2 0 2Z'/%3E%3C/svg%3E")
+}
+.zone.on{z-index:2}
+.zone.on .bg{opacity:1}
+.zone[data-z="A"] .bg{border-radius:10px 30px 0 0}
+.zone[data-z="B"] .bg{border-radius:30px 10px 0 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:6px 13px 4px}
+.grid.swap{animation:gridIn .3s ease}
+@keyframes gridIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.item{
+  background:#fff;border-radius:12px;box-shadow:var(--card-shadow);border:2px solid transparent;
+  height:168px;display:flex;flex-direction:column;align-items:center;padding:10px 2px 8px;
+  transition:border-color .2s,transform .12s
+}
+.item:active{transform:scale(.97)}
+.item.sel{border-color:var(--yellow)}
+.item .ph{height:84px;width:100%;display:flex;align-items:center;justify-content:center}
+.item .ph img{max-height:84px;max-width:96px;object-fit:contain}
+.item .nm{flex:1;display:flex;flex-direction:column;justify-content:center;font-size:12px;line-height:1.5;text-align:center;letter-spacing:0;white-space:nowrap}
+.item .tm{font-size:9.5px;color:var(--ink-3);margin-top:4px}
+
+.combo-row{display:flex;align-items:center;gap:18px;padding:12px 20px 4px;margin-top:auto}
+.combo{width:192px;height:93px;display:grid;grid-template-columns:1fr 1fr;position:relative}
+.combo::before{content:"";position:absolute;left:50%;top:8px;bottom:8px;border-left:1.5px dashed #D9D9D9;z-index:1}
+.combo .plus{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:#C8C8C8;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;font-weight:500;z-index:2}
+/* 組合欄左右各自一段外框：選了哪一區，那一半就亮黃框 */
+.slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;position:relative;border:2px solid #D9D9D9;transition:border-color .3s}
+.slot[data-slot="A"]{border-right:0;border-radius:14px 0 0 14px}
+.slot[data-slot="B"]{border-left:0;border-radius:0 14px 14px 0}
+.slot.filled{border-color:var(--yellow)}
+.slot .ph{font-size:46px;font-weight:900;color:#ECECEC;font-family:Arial,sans-serif;line-height:1}
+.slot img{height:46px;width:auto;max-width:70px;object-fit:contain}
+.slot.pop>*{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+.stepper{display:flex;border:1.5px solid #DDD;border-radius:12px;height:34px;overflow:hidden;transition:border-color .2s}
+.stepper button,.stepper span{width:43px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
+.stepper span{border-left:1.5px solid #DDD;border-right:1.5px solid #DDD;font-size:22px}
+.stepper button:disabled{color:#DDD;cursor:default}
+.stepper.off span{color:#DDD}
+/* 內容不夠高時，組合欄＋領券按鈕一起推到最底，按鈕貼齊底部選單 */
+#pickBody{display:flex;flex-direction:column}
+#pickBody>*{flex:none}
+.claim{position:sticky;bottom:0;padding:6px 0 0;display:flex;justify-content:center;z-index:3}
+.claim .btn{width:236px;border-radius:22px 22px 0 0;height:46px;font-size:16px}
+.fab{position:absolute;right:0;bottom:4px;width:52px;height:46px;border-radius:24px 0 0 24px;background:var(--red);display:flex;align-items:center;justify-content:center}
+.fab span{width:28px;height:28px;border:2px solid #fff;border-radius:50%;color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center}
+
+.flyer{position:absolute;z-index:40;pointer-events:none;object-fit:contain;will-change:transform}
+
+/* ---------- 彈窗 / 遮罩 ---------- */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.dim.on{opacity:1;pointer-events:auto}
+.dim.content{top:var(--content-top,140px);bottom:84px}
+.modal{
+  position:absolute;left:42px;right:42px;top:50%;background:#fff;border-radius:18px;padding:30px 20px 20px;z-index:21;
+  transform:translateY(-50%) scale(.9);opacity:0;pointer-events:none;transition:transform .25s cubic-bezier(.2,1.2,.4,1),opacity .2s
+}
+.modal.on{transform:translateY(-50%) scale(1);opacity:1;pointer-events:auto}
+.modal .x{position:absolute;right:16px;top:16px;width:38px;height:38px;border-radius:50%;border:1.5px solid #8A8A8A;display:flex;align-items:center;justify-content:center}
+.modal .mimg{height:90px;display:flex;justify-content:center;margin-bottom:16px}
+.modal .mimg img{max-height:90px;object-fit:contain}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opt{height:34px;border-radius:9px;border:1.5px solid #D2D2D2;font-size:15px;letter-spacing:.06em;transition:border-color .15s,background .15s}
+.opt.on{border-color:var(--yellow);background:#FFFBEF}
+.modal .btn{width:212px;margin:22px auto 0;font-size:18px}
+
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;z-index:21;padding:16px 24px 104px;transform:translateY(100%);visibility:hidden;transition:transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+.sheet.on{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.sheet .grab{width:40px;height:4px;border-radius:4px;background:#DDD;margin:0 auto 14px}
+.sheet h3{margin:0 0 14px;font-size:18px}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.steps li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.6}
+.steps b{flex:none;width:24px;height:24px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:13px}
+
+/* Loading：參考 Fry Box Loader —— 薯條盒彈跳、薯條輪流噴出再落回、地上影子跟著縮放 */
+.loading{position:absolute;inset:0;z-index:30;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.loading.on{opacity:1;pointer-events:auto}
+.loader{width:132px;height:184px;overflow:visible}
+.loader *{transform-box:fill-box}
+.loader .box{transform-origin:50% 100%;animation:boxHop 1.1s cubic-bezier(.45,0,.55,1) infinite}
+.loader .fry{transform-origin:50% 100%;animation:fryPop 1.1s cubic-bezier(.3,0,.4,1) infinite}
+.loader .shadow{transform-origin:50% 50%;animation:shadowPulse 1.1s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes boxHop{
+  0%,100%{transform:translateY(0) scale(1.07,.93)}
+  12%{transform:translateY(0) scale(.96,1.05)}
+  50%{transform:translateY(-16px) scale(1,1)}
+  86%{transform:translateY(0) scale(1,1)}
+}
+@keyframes fryPop{
+  0%,100%{transform:translateY(10px)}
+  45%{transform:translateY(-14px)}
+  70%{transform:translateY(4px)}
+}
+@keyframes shadowPulse{
+  0%,100%{transform:scaleX(1.08);opacity:.9}
+  50%{transform:scaleX(.62);opacity:.45}
+  86%{transform:scaleX(1);opacity:.85}
+}
+.loading p{margin:18px 0 0;font-size:16px;font-weight:700;text-align:center;line-height:1.5;letter-spacing:.08em;color:var(--ink)}
+.toast{position:absolute;left:50%;bottom:120px;transform:translate(-50%,10px);background:rgba(30,30,30,.9);color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;z-index:45;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- 結果頁 ---------- */
+.result{flex:1;display:flex;flex-direction:column;align-items:center;padding-top:96px}
+.result .ic{width:80px;height:80px}
+.result h2{margin:20px 0 30px;font-size:20px;font-weight:700;text-align:center;line-height:1.45;letter-spacing:.04em}
+.result .btn{width:240px;margin-bottom:16px;font-size:16px}
+.result .ic.draw circle,.result .ic.draw path{stroke-dasharray:260;stroke-dashoffset:260;animation:draw .7s ease forwards}
+.result .ic.draw path{animation-delay:.35s}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* ---------- 卡片資訊 ---------- */
+.info{padding:22px 24px}
+.info h2{margin:0 0 14px;font-size:17px}
+.info .k{font-size:11px;color:var(--ink-2)}
+.info .v{font-size:15px;margin:2px 0 0 10px}
+
+/* ---------- My M 優惠 ---------- */
+.mym-top{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 8px;border-bottom:1px solid #F0F0F0}
+.mym-top .logo{font-weight:900;font-size:22px;color:var(--red);display:flex;align-items:flex-end;gap:2px}
+.mym-top .qr{width:36px;height:36px;border-radius:8px;background:var(--yellow);display:flex;align-items:center;justify-content:center}
+.mym-top .pt{font-weight:700;font-size:16px;display:flex;gap:6px;align-items:center}
+.mym h2{margin:14px 24px 12px;font-size:22px}
+.chips{display:flex;gap:8px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+.chips span{flex:none;padding:8px 16px;border:1px solid #CFCFCF;border-radius:999px;font-size:13px}
+.chips span.on{background:var(--yellow);border-color:var(--yellow)}
+.coupons{padding:18px 22px 24px;display:flex;flex-direction:column;gap:18px}
+.coupon{border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.12);background:#fff;text-align:left}
+.coupon.new{animation:newIn .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes newIn{from{transform:translateY(-14px) scale(.96);opacity:0}}
+.coupon>img{width:100%;aspect-ratio:470/235;object-fit:cover}
+.coupon .gen{position:relative;aspect-ratio:470/235;background:linear-gradient(180deg,#FFE6E8 0,#FBD3D6 60%,#F6B8BD 100%);overflow:hidden}
+.coupon .gen::after{content:"";position:absolute;left:-10%;right:-10%;bottom:-40%;height:70%;border-radius:50%;background:#F4A9AF;opacity:.55}
+.coupon .gen .lg{position:absolute;left:18px;top:30px;width:150px;mix-blend-mode:multiply;z-index:1}
+.coupon .gen .fa,.coupon .gen .fb{position:absolute;bottom:14px;height:62%;width:auto;mix-blend-mode:multiply;z-index:1}
+.coupon .gen .fa{right:96px}.coupon .gen .fb{right:24px;height:66%}
+.coupon .gen i{position:absolute;z-index:2;width:28px;height:28px;border-radius:50%;background:#E8505B;color:#fff;font-style:normal;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center}
+.coupon .gen .ia{right:150px;top:40px}.coupon .gen .ib{right:16px;top:14px}
+.coupon .ct{padding:12px 16px 14px}
+.coupon .ct b{display:block;font-size:15px;letter-spacing:.02em}
+.coupon .ct small{color:var(--ink-3);font-size:12px}
+.coupon .badge{display:inline-block;margin-left:6px;font-size:10px;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;vertical-align:2px}
+
+/* ---------- 熱區提示（點到非互動區時） ---------- */
+.screen.hint [data-hot]{box-shadow:0 0 0 2px var(--hot),inset 0 0 0 999px var(--hot)!important;transition:none}
+
+/* ---------- 響應式：手機直接全螢幕 ---------- */
+@media (max-width:760px){
+  body{display:block;overflow:hidden;background:#fff}
+  .stage{position:fixed;inset:0}
+  .device{width:100%;height:100%;border-radius:0;padding:0;box-shadow:none;transform:none!important;background:#fff}
+  .screen{border-radius:0}
+  .island,.statusbar,.homebar{display:none}
+  .view{padding-top:env(safe-area-inset-top)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="device" id="device">
+    <div class="screen" id="screen">
+      <div class="island"></div>
+      <div class="statusbar"><span>1:19</span><span class="r">
+        <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        5G
+        <svg width="26" height="13" viewBox="0 0 26 13"><rect x=".5" y=".5" width="22" height="12" rx="3.5" fill="none" stroke="#999"/><rect x="2" y="2" width="16" height="9" rx="2" fill="#34C759"/><rect x="23.5" y="4.5" width="2" height="4" rx="1" fill="#999"/></svg>
+      </span></div>
+
+      <!-- 1. 綁定首頁 -->
+      <section class="view" data-view="home">
+        <div class="navbar">
+          <button class="back" data-hot data-act="back" aria-label="返回"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="#222" stroke-width="2"><path d="M10 2 2 10l8 8"/></svg></button>
+          <div class="brand"><img src="proto/logo.jpg" alt="甜心卡"></div>
+        </div>
+        <div class="body">
+          <img class="banner" src="proto/banner.jpg" alt="2024 麥當勞叔叔與好朋友們 抖陣一起甜心卡，買 A 送 B 優惠一整年">
+          <div class="bind-hero">
+            <img class="card" src="proto/card.jpg" alt="甜心卡背面：QR Code 與數位卡號、密碼的位置">
+            <div>
+              <h2>甜心卡<small>掃描QR Code以完成綁定</small></h2>
+              <button class="btn" data-hot data-go="scan">掃描綁定</button>
+              <button class="link" data-hot data-go="input">手動輸入</button>
+            </div>
+          </div>
+          <div class="acc" id="homeAcc"></div>
+        </div>
+        <nav class="tabbar" data-tabbar="sweet"></nav>
+      </section>
+
+      <!-- 2. 掃描 -->
+      <section class="view" data-view="scan" hidden>
+        <div class="scan" id="scan">
+          <button class="close" data-hot data-act="back" aria-label="關閉"><svg width="22" height="22" viewBox="0 0 22 22" stroke="#fff" stroke-width="2.2"><path d="M3 3l16 16M19 3 3 19"/></svg></button>
+          <div class="frame"><i></i><i></i><i></i><i></i><div class="qr"></div><div class="line"></div></div>
+          <p>請將甜心卡背面的 QR Code<br>對準框內</p>
+          <div class="ok">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" stroke="#FFBC0D" stroke-width="3.5"><circle cx="28" cy="28" r="25"/><path d="M16 29l8 8 16-17"/></svg>
+            辨識成功
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 手動輸入 -->
+      <section class="view" data-view="input" hidden>
+        <div class="navbar">
+          <button class="back" data-hot data-act="back" aria-label="返回"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="#222" stroke-width="2"><path d="M10 2 2 10l8 8"/></svg></button>
+          <div class="brand"><img src="proto/logo.jpg" alt="甜心卡"></div>
+        </div>
+        <div class="body">
+          <img class="banner" src="proto/banner.jpg" alt="">
+          <form class="form" id="bindForm" autocomplete="off" novalidate>
+            <label for="sn">數位序號</label>
+            <div class="field"><input id="sn" inputmode="numeric" placeholder="請輸入 16 碼數位序號" data-hot></div>
+            <label for="pw">數位密碼</label>
+            <div class="field">
+              <input id="pw" type="password" placeholder="請輸入數位密碼" data-hot>
+              <button type="button" class="eye" id="eye" data-hot aria-label="顯示密碼"></button>
+            </div>
+            <button class="btn is-off" id="bindBtn" data-hot>立即綁定</button>
+          </form>
+        </div>
+        <nav class="tabbar" data-tabbar="sweet"></nav>
+      </section>
+
+      <!-- 4. 選餐 -->
+      <section class="view" data-view="pick" hidden>
+        <div class="navbar">
+          <button class="back" data-hot data-act="back" aria-label="返回"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="#222" stroke-width="2"><path d="M10 2 2 10l8 8"/></svg></button>
+          <div class="brand"><img src="proto/logo.jpg" alt="甜心卡">
+            <div class="links">
+              <button data-hot data-act="howto"><svg width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="#FFBC0D" stroke-width="1.6"><path d="M1 3h8v12H1zM12 3h9v12h-9zM3 3V1M6 3V0.5M15 3V1M18 3V1"/></svg>買A送B</button>
+              <button data-hot data-go="cardinfo"><b style="letter-spacing:1px">···</b> 更多資訊</button>
+            </div>
+          </div>
+        </div>
+        <div class="body" id="pickBody">
+          <div class="zones">
+            <button class="zone on" data-z="A" data-hot><span class="bg"></span><span class="zl">先選A區</span></button>
+            <button class="zone" data-z="B" data-hot><span class="bg"></span><span class="zl">再送B區</span></button>
+          </div>
+          <div class="grid" id="grid"></div>
+          <div class="combo-row">
+            <div class="combo" id="combo">
+              <button class="slot" data-slot="A" data-hot><span class="ph">A</span></button>
+              <span class="plus">+</span>
+              <button class="slot" data-slot="B" data-hot><span class="ph">B</span></button>
+            </div>
+            <div class="stepper off" id="stepper">
+              <button id="minus" disabled aria-label="減少">−</button><span id="qty">1</span><button id="plus" disabled aria-label="增加">+</button>
+            </div>
+          </div>
+          <div class="claim">
+            <button class="btn is-off" id="claimBtn" data-hot>領取甜心優惠券</button>
+            <button class="fab" data-hot data-act="howto" aria-label="如何使用"><span>?</span></button>
+          </div>
+        </div>
+        <nav class="tabbar" data-tabbar="sweet"></nav>
+      </section>
+
+      <!-- 5. 領取成功 -->
+      <section class="view" data-view="success" hidden>
+        <div class="navbar">
+          <button class="back" data-hot data-go="pick" data-reset aria-label="返回"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="#222" stroke-width="2"><path d="M10 2 2 10l8 8"/></svg></button>
+          <div class="brand"><img src="proto/logo.jpg" alt="甜心卡"></div>
+        </div>
+        <div class="result">
+          <svg class="ic draw" viewBox="0 0 80 80" fill="none" stroke="#FFBC0D" stroke-width="3"><circle cx="40" cy="40" r="37"/><path d="M24 40l12 12 24-26" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h2>您已獲得兌換券</h2>
+          <button class="btn" data-hot data-go="coupons">查看兌換券</button>
+          <button class="btn" data-hot data-go="pick" data-reset>繼續買 A 送 B</button>
+        </div>
+        <nav class="tabbar" data-tabbar="sweet"></nav>
+      </section>
+
+
+      <!-- 6. 卡片資訊 -->
+      <section class="view" data-view="cardinfo" hidden>
+        <div class="navbar">
+          <button class="back" data-hot data-act="back" aria-label="返回"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="#222" stroke-width="2"><path d="M10 2 2 10l8 8"/></svg></button>
+          <div class="brand"><img src="proto/logo.jpg" alt="甜心卡">
+            <div class="links">
+              <button data-hot data-act="back"><svg width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="#FFBC0D" stroke-width="1.6"><path d="M1 3h8v12H1zM12 3h9v12h-9zM3 3V1M6 3V0.5M15 3V1M18 3V1"/></svg>甜心組合</button>
+              <button style="color:var(--red);font-weight:700"><b style="letter-spacing:1px">···</b> 更多資訊</button>
+            </div>
+          </div>
+        </div>
+        <div class="body" style="display:flex;flex-direction:column">
+          <div class="info" style="flex:1">
+            <h2>卡片資訊</h2>
+            <div class="k">・使用期限</div>
+            <div class="v">2026/3/31</div>
+          </div>
+          <div class="acc" id="infoAcc"></div>
+        </div>
+        <nav class="tabbar" data-tabbar="sweet"></nav>
+      </section>
+
+      <!-- 7. My M 優惠 -->
+      <section class="view mym" data-view="coupons" hidden>
+        <div class="mym-top">
+          <span class="logo">My<svg width="34" height="26" viewBox="0 0 34 26"><path d="M3 25C3 8 6 2 9.5 2S15 9 17 18C19 9 21 2 24.5 2S31 8 31 25" fill="none" stroke="#FFBC0D" stroke-width="5"/></svg></span>
+          <span class="qr"><svg width="20" height="20" viewBox="0 0 20 20" fill="#222"><rect x="1" y="1" width="7" height="7" fill="none" stroke="#222" stroke-width="2"/><rect x="12" y="1" width="7" height="7" fill="none" stroke="#222" stroke-width="2"/><rect x="1" y="12" width="7" height="7" fill="none" stroke="#222" stroke-width="2"/><rect x="12" y="12" width="3" height="3"/><rect x="16" y="16" width="3" height="3"/></svg></span>
+          <span class="pt">0 Points <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="#222" stroke-width="2"><path d="M1 1l6 6-6 6"/></svg></span>
+        </div>
+        <div class="body">
+          <h2>優惠</h2>
+          <div class="chips"><span>手機點餐</span><span>歡樂送</span><span class="on">甜心卡</span><span>早餐</span><span>漢堡雞肉</span></div>
+          <div class="coupons" id="couponList"></div>
+        </div>
+        <nav class="tabbar" data-tabbar="mym"></nav>
+      </section>
+
+      <!-- 共用圖層 -->
+      <div class="dim content" id="dim"></div>
+      <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="選擇規格">
+        <button class="x" id="modalX" data-hot aria-label="關閉"><svg width="18" height="18" viewBox="0 0 18 18" stroke="#666" stroke-width="1.6"><path d="M2 2l14 14M16 2 2 16"/></svg></button>
+        <div class="mimg"><img id="modalImg" alt=""></div>
+        <div class="opts" id="opts"></div>
+        <button class="btn is-off" id="modalOk" data-hot>確認</button>
+      </div>
+      <div class="dim" id="dimFull"></div>
+      <div class="sheet" id="sheet" role="dialog" aria-label="如何使用">
+        <div class="grab"></div>
+        <h3>如何使用甜心卡</h3>
+        <ol class="steps">
+          <li><b>1</b><span>先選 A 區：選一個要「買」的品項，有規格的再選中包、大包等。</span></li>
+          <li><b>2</b><span>再送 B 區：選一個要「送」的品項。</span></li>
+          <li><b>3</b><span>點「領取甜心優惠券」，兌換券會放進「回饋優惠 › 甜心卡」。</span></li>
+          <li><b>4</b><span>到店或手機點餐時出示兌換券，在有效期限內使用。</span></li>
+        </ol>
+      </div>
+      <div class="loading" id="loading" role="status" aria-live="polite">
+        <svg class="loader" viewBox="0 0 132 184" aria-hidden="true">
+          <ellipse class="shadow" cx="66" cy="172" rx="26" ry="3.5" fill="#E9E9E9"/>
+          <g class="box">
+            <g class="fries" fill="#FFC72C">
+              <g transform="rotate(-6 40.5 110)"><rect class="fry" x="38" y="46" width="5" height="64" rx="1.5" style="animation-delay:-0.05s"/></g>
+              <g transform="rotate(-4 48.5 110)"><rect class="fry" x="46" y="36" width="5" height="74" rx="1.5" style="animation-delay:-0.32s"/></g>
+              <g transform="rotate(-2 55.5 110)"><rect class="fry" x="53" y="52" width="5" height="58" rx="1.5" style="animation-delay:-0.14s"/></g>
+              <g transform="rotate(0 62.5 110)"><rect class="fry" x="60" y="26" width="5" height="84" rx="1.5" style="animation-delay:-0.41s"/></g>
+              <g transform="rotate(2 69.5 110)"><rect class="fry" x="67" y="44" width="5" height="66" rx="1.5" style="animation-delay:-0.22s"/></g>
+              <g transform="rotate(4 76.5 110)"><rect class="fry" x="74" y="34" width="5" height="76" rx="1.5" style="animation-delay:-0.5s"/></g>
+              <g transform="rotate(5 83.5 110)"><rect class="fry" x="81" y="50" width="5" height="60" rx="1.5" style="animation-delay:-0.09s"/></g>
+              <g transform="rotate(7 90.5 110)"><rect class="fry" x="88" y="58" width="5" height="52" rx="1.5" style="animation-delay:-0.36s"/></g>
+              <g transform="rotate(-1 59.5 110)"><rect class="fry" x="57" y="62" width="5" height="48" rx="1.5" style="animation-delay:-0.27s"/></g>
+            </g>
+            <path d="M40 112a26 26 0 0 1 52 0z" fill="#FCEFC7"/>
+            <path d="M44 112v-8M50 112v-14M56 112v-17M62 112v-19M68 112v-19M74 112v-17M80 112v-14M86 112v-8" stroke="#F4DC98" stroke-width="1.4"/>
+            <path d="M36 108Q66 120 96 108L89 160Q66 155 43 160Z" fill="#DE3B24"/>
+            <path d="M57 145c0-11 1.6-14 3.6-14s3.2 6 3.4 10.5c.2-4.5 1.4-10.5 3.4-10.5s3.6 3 3.6 14" fill="none" stroke="#FFC72C" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <p id="loadingText">甜心優惠券發放中<br>請稍後</p>
+      </div>
+      <div class="toast" id="toast"></div>
+      <div class="homebar"></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(() => {
+  const IMG = 'proto/';
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const screen = $('#screen');
+
+  /* ---------- 資料 ---------- */
+  const MENU = {
+    A: [
+      { id: 'a1', img: 'cut-a-cola.png', names: ['中杯汽水', '中杯冰紅茶', '中杯冰綠茶'] },
+      { id: 'a2', img: 'cut-a-mccafe.png', names: ['經典那堤', '經典卡布奇諾', '經典美式咖啡'] },
+      { id: 'a3', img: 'cut-a-nuggets.png', names: ['四塊麥克雞塊', '六塊麥克雞塊', '十塊麥克雞塊'] },
+      { id: 'a4', img: 'cut-a-tea.png', names: ['蜂蜜紅茶', '蜂蜜奶茶', '焦糖奶茶', '奶茶'] },
+      { id: 'a5', img: 'cut-a-fries.png', names: ['大包薯條'], time: '10:30後供應', opts: ['中包', '大包'], label: o => o + '薯條' },
+      { id: 'a6', img: 'cut-a-oreo.png', names: ['OREO冰炫風', '雙倍OREO冰炫風', '大杯玉米湯'] },
+    ],
+    B: [
+      { id: 'b1', img: 'cut-a-cola.png', names: ['中杯汽水', '中杯冰紅茶', '中杯綠茶'] },
+      { id: 'b2', img: 'cut-a-mccafe.png', names: ['經典美式咖啡'] },
+      { id: 'b3', img: 'cut-b-hashbrown.png', names: ['薯餅'], time: '10:30前供應' },
+      { id: 'b4', img: 'cut-b-cone.png', names: ['蛋捲冰淇淋'] },
+      { id: 'b5', img: 'cut-b-fries-s.png', names: ['小包薯條'], time: '10:30後供應' },
+      { id: 'b6', img: 'cut-b-tea.png', names: ['紅茶', '奶茶'] },
+    ],
+  };
+  const optsOf = it => it.opts || it.names;
+  const labelOf = (it, o) => (it.label ? it.label(o) : o);
+
+  const HOME_ACC = [
+    ['如何綁定', '在麥當勞 App 的「數位甜心卡」專區，掃描甜心卡背面的 QR Code，或手動輸入數位序號與密碼，就能完成綁定。'],
+    ['如何領券', '綁定後進入甜心卡，先選 A 區、再選 B 區的品項，點「領取甜心優惠券」即可領取。'],
+    ['如何兌換', '兌換券會放在「回饋優惠 › 甜心卡」，於有效期限內出示即可兌換。'],
+    ['注意事項', '（示意文案）每張兌換券都有有效期限，逾期將無法使用；部分品項有供應時段限制。'],
+    ['常見問題', '（示意文案）若綁定失敗，請確認序號與密碼是否輸入正確，或稍後再試。'],
+  ];
+  const INFO_ACC = HOME_ACC.slice(3);
+
+  /* ---------- 狀態 ---------- */
+  const st = { view: 'home', stack: [], zone: 'A', sel: { A: null, B: null }, qty: 1, bound: false, coupons: [] };
+
+  /* ---------- 手機縮放（桌面版） ---------- */
+  const device = $('#device');
+  function fit() {
+    if (innerWidth <= 760) { device.style.transform = ''; return; }
+    const s = Math.min(1, (innerHeight - 40) / 868);
+    device.style.transform = `scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+  const scaleOf = () => screen.getBoundingClientRect().width / screen.offsetWidth;
+
+  /* ---------- 共用元件 ---------- */
+  const TAB_ICONS = {
+    arches: '<svg viewBox="0 0 30 30"><path d="M4 26C4 10 7 5 10.5 5S16 12 15 20C16 12 16 5 19.5 5S26 10 26 26" fill="none" stroke="#FFBC0D" stroke-width="3.6"/></svg>',
+    archesGray: '<svg viewBox="0 0 30 30"><path d="M5 26C5 10 8 5 11 5S16 12 15 20C16 12 16 5 19 5S25 10 25 26" fill="none" stroke="#999" stroke-width="3"/></svg>',
+    reward: c => `<svg viewBox="0 0 30 30" fill="none" stroke="${c}" stroke-width="1.6"><path d="M3 24h24M5 24a10 10 0 0 1 20 0"/><path d="M10 24c0-8 1.5-11 3-11s2 4 2 8c0-4 .5-8 2-8s3 3 3 11"/></svg>`,
+    delivery: '<svg viewBox="0 0 30 30" fill="none" stroke="#999" stroke-width="1.6"><circle cx="8" cy="22" r="3"/><circle cx="23" cy="22" r="3"/><path d="M4 6h10v8H4zM11 22h9l2-7h-5l-2 4H8M22 15l-2-7h-3"/></svg>',
+    me: '<svg viewBox="0 0 30 30" fill="none" stroke="#999" stroke-width="1.6"><circle cx="15" cy="10" r="5.5"/><path d="M5 26c1-5.5 5-8 10-8s9 2.5 10 8z"/></svg>',
+    more: '<svg viewBox="0 0 30 30" fill="#999"><circle cx="7" cy="15" r="2"/><circle cx="15" cy="15" r="2"/><circle cx="23" cy="15" r="2"/></svg>',
+    order: '<svg viewBox="0 0 30 30" fill="none" stroke="#999" stroke-width="1.6"><path d="M8 4h14v22H8z"/><path d="M11 22c0-6 1-9 2.3-9S15 16 15 19c0-3 .4-6 1.7-6S19 16 19 22"/></svg>',
+  };
+  function renderTabbars() {
+    $$('[data-tabbar="sweet"]').forEach(n => n.innerHTML = `
+      <button class="on" data-hot data-act="home">${TAB_ICONS.arches}首頁</button>
+      <button data-hot data-go="coupons">${TAB_ICONS.reward('#999')}回饋優惠</button>
+      <button data-hot data-act="na">${TAB_ICONS.delivery}歡樂送</button>
+      <button data-hot data-act="na">${TAB_ICONS.me}我的帳號</button>
+      <button data-hot data-act="na">${TAB_ICONS.more}更多設定</button>`);
+    $$('[data-tabbar="mym"]').forEach(n => n.innerHTML = `
+      <button data-hot data-act="home">${TAB_ICONS.archesGray}首頁</button>
+      <button class="on" data-hot>${TAB_ICONS.reward('#FFBC0D')}回饋優惠</button>
+      <button data-hot data-act="na">${TAB_ICONS.order}手機點餐</button>
+      <button data-hot data-act="na">${TAB_ICONS.delivery}歡樂送</button>
+      <button data-hot data-act="na">${TAB_ICONS.more}更多設定</button>`);
+  }
+  const CHEV = '<svg width="11" height="20" viewBox="0 0 11 20" fill="none" stroke="#222" stroke-width="2"><path d="M1.5 2l8 8-8 8"/></svg>';
+  function renderAcc(el, rows) {
+    el.innerHTML = rows.map(([t, c]) => `
+      <div class="acc-item"><button data-hot aria-expanded="false">${t}${CHEV}</button>
+      <div class="acc-c"><div><p>${c}</p></div></div></div>`).join('');
+    el.addEventListener('click', e => {
+      const b = e.target.closest('.acc-item>button'); if (!b) return;
+      const it = b.parentElement; const open = !it.classList.contains('open');
+      it.classList.toggle('open', open); b.setAttribute('aria-expanded', open);
+    });
+  }
+
+  let toastT;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1600);
+  }
+
+  /* ---------- 導覽 ---------- */
+  function go(name, { back = false, push = true } = {}) {
+    if (name === st.view) return;
+    closeLayers();
+    if (push && !back) st.stack.push(st.view);
+    $$('.view').forEach(v => { v.hidden = v.dataset.view !== name; v.classList.remove('enter', 'enter-back'); });
+    const v = $(`[data-view="${name}"]`);
+    void v.offsetWidth; v.classList.add(back ? 'enter-back' : 'enter');
+    v.querySelectorAll('.ic.draw').forEach(ic => { ic.classList.remove('draw'); void ic.offsetWidth; ic.classList.add('draw'); });
+    st.view = name;
+    if (name === 'scan') startScan(); else stopScan();
+    if (name === 'coupons') renderCoupons();
+    if (name === 'pick') requestAnimationFrame(syncDim);
+  }
+  function back() {
+    const prev = st.stack.pop();
+    if (prev) go(prev, { back: true, push: false });
+    else toast('已經是第一頁');
+  }
+  function resetPick() {
+    st.sel = { A: null, B: null }; st.qty = 1; st.zone = 'A';
+    renderPick(); renderCombo(true);
+  }
+
+  /* ---------- 掃描 ---------- */
+  let scanT;
+  function startScan() {
+    const s = $('#scan'); s.classList.remove('done');
+    clearTimeout(scanT);
+    scanT = setTimeout(() => {
+      s.classList.add('done');
+      scanT = setTimeout(() => bindDone(), 900);
+    }, 2200);
+  }
+  function stopScan() { clearTimeout(scanT); }
+  function bindDone() {
+    st.bound = true;
+    st.zone = 'A'; renderPick(); $('#pickBody').scrollTop = 0;
+    st.stack = ['home'];
+    go('pick', { push: false });
+    toast('綁定成功');
+  }
+
+  /* ---------- 手動輸入 ---------- */
+  const sn = $('#sn'), pw = $('#pw'), bindBtn = $('#bindBtn'), eye = $('#eye');
+  const EYE_OFF = '<svg width="26" height="20" viewBox="0 0 26 20" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 10S6 2.5 13 2.5 24.5 10 24.5 10 20 17.5 13 17.5 1.5 10 1.5 10z"/><circle cx="13" cy="10" r="3.6" fill="#111"/><path d="M3 18 23 2"/></svg>';
+  const EYE_ON = '<svg width="26" height="20" viewBox="0 0 26 20" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 10S6 2.5 13 2.5 24.5 10 24.5 10 20 17.5 13 17.5 1.5 10 1.5 10z"/><circle cx="13" cy="10" r="3.6" fill="#111"/></svg>';
+  eye.innerHTML = EYE_OFF;
+  const fmtSn = v => v.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1  ');
+  function checkForm() {
+    const ok = sn.value.replace(/\D/g, '').length === 16 && pw.value.trim().length > 0;
+    bindBtn.classList.toggle('is-off', !ok);
+    return ok;
+  }
+  sn.addEventListener('input', () => { sn.value = fmtSn(sn.value); checkForm(); });
+  pw.addEventListener('input', checkForm);
+  eye.addEventListener('click', () => {
+    const show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    eye.innerHTML = show ? EYE_ON : EYE_OFF;
+    eye.setAttribute('aria-label', show ? '隱藏密碼' : '顯示密碼');
+  });
+  $('#bindForm').addEventListener('submit', e => {
+    e.preventDefault();
+    if (!checkForm()) {
+      toast(sn.value.replace(/\D/g, '').length < 16 ? '請輸入 16 碼數位序號' : '請輸入數位密碼');
+      return;
+    }
+    showLoading('綁定中<br>請稍後');
+    setTimeout(() => { hideLoading(); bindDone(); }, 1100);
+  });
+  function fillDemo() { sn.value = fmtSn('1234567812345678'); pw.value = 'YA123ya456'; checkForm(); }
+
+  /* ---------- 選餐 ---------- */
+  const grid = $('#grid');
+  function renderPick(animate) {
+    $$('.zone').forEach(z => z.classList.toggle('on', z.dataset.z === st.zone));
+    const zone = st.zone, sel = st.sel[zone];
+    grid.innerHTML = MENU[zone].map(it => `
+      <button class="item${sel && sel.id === it.id ? ' sel' : ''}" data-id="${it.id}" data-hot>
+        <span class="ph"><img src="${IMG + it.img}" alt=""></span>
+        <span class="nm">${it.names.join('<br>')}${it.time ? `<span class="tm">${it.time}</span>` : ''}</span>
+      </button>`).join('');
+    if (animate) { grid.classList.remove('swap'); void grid.offsetWidth; grid.classList.add('swap'); }
+  }
+  function renderCombo(silent, which) {
+    ['A', 'B'].forEach(z => {
+      const slot = $(`[data-slot="${z}"]`), s = st.sel[z];
+      slot.innerHTML = s ? `<img src="${IMG + s.img}" alt=""><span>${s.label}</span>` : `<span class="ph">${z}</span>`;
+      slot.setAttribute('aria-label', s ? `${z} 區：${s.label}` : `${z} 區尚未選擇`);
+      slot.classList.toggle('filled', !!s);
+      if (!silent && which === z) { slot.classList.remove('pop'); void slot.offsetWidth; slot.classList.add('pop'); }
+    });
+    const hasA = !!st.sel.A;
+    $('#stepper').classList.toggle('off', !hasA);
+    $('#minus').disabled = !hasA || st.qty <= 1;
+    $('#plus').disabled = !hasA || st.qty >= 10;
+    $('#qty').textContent = st.qty;
+    $('#claimBtn').classList.toggle('is-off', !(st.sel.A && st.sel.B));
+  }
+
+  // 規格彈窗
+  let pending = null, chosen = null;
+  function openModal(it, fromEl) {
+    pending = { it, fromEl };
+    const cur = st.sel[st.zone];
+    chosen = cur && cur.id === it.id ? cur.opt : null;
+    $('#modalImg').src = IMG + it.img;
+    $('#modalImg').style.visibility = '';
+    $('#opts').innerHTML = optsOf(it).map(o => `<button class="opt${o === chosen ? ' on' : ''}" data-o="${o}" data-hot>${o}</button>`).join('');
+    $('#modalOk').classList.toggle('is-off', !chosen);
+    syncDim();
+    $('#dim').classList.add('on'); $('#modal').classList.add('on');
+  }
+  function closeModal() { $('#dim').classList.remove('on'); $('#modal').classList.remove('on'); pending = null; }
+  $('#opts').addEventListener('click', e => {
+    const b = e.target.closest('.opt'); if (!b) return;
+    chosen = b.dataset.o;
+    $$('.opt').forEach(x => x.classList.toggle('on', x === b));
+    $('#modalOk').classList.remove('is-off');
+  });
+  $('#modalOk').addEventListener('click', () => {
+    if (!chosen || !pending) return;
+    const { it } = pending;
+    // 按下確認的瞬間：彈窗裡的薯條圖直接往下掉進組合欄，彈窗稍後才淡出
+    const img = $('#modalImg');
+    commit(it, chosen, img, 'drop');
+    img.style.visibility = 'hidden';
+    pending = null;
+    setTimeout(closeModal, 140);
+  });
+  $('#modalX').addEventListener('click', closeModal);
+  $('#dim').addEventListener('click', () => { closeModal(); closeSheet(); });
+
+  function commit(it, opt, srcImg, mode) {
+    const zone = st.zone;
+    const prevSame = st.sel[zone] && st.sel[zone].id === it.id && st.sel[zone].opt === opt;
+    st.sel[zone] = { id: it.id, img: it.img, opt, label: labelOf(it, opt) };
+    renderPick();
+    if (prevSame) { renderCombo(true); return; }
+    fly(srcImg, zone, () => renderCombo(false, zone), mode);
+  }
+
+  // 「收進組合欄」動態：餐點飛進下方的 A / B 格
+  // mode 'drop'：從規格彈窗往下掉（預備動作 → 拉長下墜 → 落地壓扁）；預設：從卡片拋物線飛入
+  function fly(src, zone, done, mode) {
+    const slot = $(`[data-slot="${zone}"]`);
+    if (!src || matchMedia('(prefers-reduced-motion: reduce)').matches) { done(); return; }
+    const k = scaleOf(), base = screen.getBoundingClientRect();
+    const a = src.getBoundingClientRect(), b = slot.getBoundingClientRect();
+    const x0 = (a.left - base.left) / k, y0 = (a.top - base.top) / k, w0 = a.width / k, h0 = a.height / k;
+    const tw = 46, th = 46;
+    const x1 = (b.left - base.left) / k + (b.width / k - tw) / 2, y1 = (b.top - base.top) / k + (b.height / k - th) / 2 - 8;
+    const f = document.createElement('img');
+    f.className = 'flyer'; f.src = src.src;
+    Object.assign(f.style, { left: x0 + 'px', top: y0 + 'px', width: w0 + 'px', height: h0 + 'px' });
+    screen.appendChild(f);
+    const dx = x1 - x0 + (tw - w0) / 2, dy = y1 - y0 + (th - h0) / 2, sc = Math.min(tw / w0, th / h0);
+    const mid = (1 + sc) / 2;
+    const frames = mode === 'drop' ? [
+      { transform: 'translate(0,0) scale(1,1)', filter: 'blur(0)', offset: 0, easing: 'ease-out' },
+      { transform: 'translate(0,-14px) scale(1.06,.94)', filter: 'blur(0)', offset: .16, easing: 'cubic-bezier(.55,0,.9,.45)' },
+      { transform: `translate(${dx * .9}px, ${dy * .9}px) scale(${sc * .85},${sc * 1.3})`, filter: 'blur(1.6px)', offset: .74, easing: 'ease-out' },
+      { transform: `translate(${dx}px, ${dy + 3}px) scale(${sc * 1.18},${sc * .78})`, filter: 'blur(0)', offset: .87, easing: 'ease-out' },
+      { transform: `translate(${dx}px, ${dy}px) scale(${sc},${sc})`, filter: 'blur(0)', offset: 1 },
+    ] : [
+      { transform: 'translate(0,0) scale(1) rotate(0)', offset: 0 },
+      { transform: `translate(${dx * 0.35}px, ${dy * 0.35 - 70}px) scale(${mid + .1}) rotate(-8deg)`, offset: .45 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${sc}) rotate(0)`, offset: 1 },
+    ];
+    const dur = mode === 'drop' ? 760 : 620;
+    const anim = f.animate(frames, mode === 'drop' ? { duration: dur } : { duration: dur, easing: 'cubic-bezier(.45,.05,.4,1)' });
+    let landed = false;
+    const land = () => { if (landed) return; landed = true; f.remove(); done(); };
+    anim.onfinish = land;
+    setTimeout(land, dur + 80); // 動畫被瀏覽器節流時的保險
+  }
+
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.item'); if (!card) return;
+    const it = MENU[st.zone].find(x => x.id === card.dataset.id);
+    if (optsOf(it).length > 1) openModal(it, card);
+    else commit(it, optsOf(it)[0], card.querySelector('img'));
+  });
+  $$('.zone').forEach(z => z.addEventListener('click', () => {
+    if (st.zone === z.dataset.z) return;
+    st.zone = z.dataset.z; renderPick(true);
+  }));
+  $$('[data-slot]').forEach(s => s.addEventListener('click', () => {
+    if (st.zone !== s.dataset.slot) { st.zone = s.dataset.slot; renderPick(true); }
+  }));
+  $('#minus').addEventListener('click', () => { if (st.qty > 1) { st.qty--; renderCombo(true); } });
+  $('#plus').addEventListener('click', () => { if (st.qty < 10) { st.qty++; renderCombo(true); } });
+  $('#claimBtn').addEventListener('click', () => {
+    if (!(st.sel.A && st.sel.B)) {
+      toast(!st.sel.A ? '請先選擇 A 區品項' : '請選擇 B 區贈送品項');
+      return;
+    }
+    showLoading('甜心優惠券發放中<br>請稍後');
+    setTimeout(() => {
+      hideLoading();
+      const { A, B } = st.sel;
+      for (let i = 0; i < st.qty; i++) st.coupons.unshift({ title: `甜心卡_買${A.label}送${B.label}`, a: A.img, b: B.img, fresh: true });
+      resetPick();
+      go('success');
+    }, 1700);
+  });
+
+  // 甜心卡專區中的 overlay 只蓋住內容區（標題列與底部選單保持清楚）
+  function syncDim() {
+    const v = $(`[data-view="${st.view}"]`), nav = v && v.querySelector('.navbar');
+    if (nav) $('#dim').style.setProperty('--content-top', (nav.offsetTop + nav.offsetHeight) + 'px');
+  }
+
+  /* ---------- 如何使用 ---------- */
+  function openSheet() { $('#dimFull').classList.add('on'); $('#sheet').classList.add('on'); }
+  function closeSheet() { $('#dimFull').classList.remove('on'); $('#sheet').classList.remove('on'); }
+  $('#dimFull').addEventListener('click', closeSheet);
+  $('#sheet').addEventListener('click', closeSheet);
+  function closeLayers() { closeModal(); closeSheet(); }
+
+  /* ---------- Loading ---------- */
+  function showLoading(html) { $('#loadingText').innerHTML = html; $('#loading').classList.add('on'); }
+  function hideLoading() { $('#loading').classList.remove('on'); }
+
+  /* ---------- 兌換券 ---------- */
+  const BASE_COUPONS = [
+    { title: '甜心卡_買大薯送可口可樂(中)', img: 'coupon1.png' },
+    { title: '甜心卡_買4塊原味麥克雞塊送雪碧(中)', img: 'coupon2.png' },
+  ];
+  function renderCoupons() {
+    const list = [...st.coupons, ...BASE_COUPONS];
+    const art = c => c.img ? `<img src="${IMG + c.img}" alt="">`
+      : `<div class="gen"><img class="lg" src="${IMG}logo.jpg" alt=""><img class="fa" src="${IMG + c.a}" alt=""><img class="fb" src="${IMG + c.b}" alt=""><i class="ia">買</i><i class="ib">送</i></div>`;
+    $('#couponList').innerHTML = list.map(c => `
+      <button class="coupon${c.fresh ? ' new' : ''}" data-hot data-act="na">
+        ${art(c)}
+        <div class="ct"><b>${c.title}${c.fresh ? '<span class="badge">NEW</span>' : ''}</b><small>本券失效日：2024-12-08</small></div>
+      </button>`).join('');
+    st.coupons.forEach(c => c.fresh = false);
+  }
+
+  /* ---------- 全域點擊 ---------- */
+  screen.addEventListener('click', e => {
+    const t = e.target.closest('[data-go],[data-act]');
+    if (t) {
+      if (t.dataset.reset !== undefined) { resetPick(); st.stack = ['home']; go(t.dataset.go, { push: false }); return; }
+      if (t.dataset.go) go(t.dataset.go);
+      const act = t.dataset.act;
+      if (act === 'back') back();
+      if (act === 'home') { st.stack = []; go(st.bound ? 'pick' : 'home', { push: false }); }
+      if (act === 'howto') openSheet();
+      if (act === 'na') toast('此 Prototype 未包含這個頁面');
+      return;
+    }
+    // 點到非互動區：閃一下可點的熱區（類似 Figma 原型）
+    if (!e.target.closest('[data-hot],button,input,label,.modal,.sheet,.acc-c')) {
+      screen.classList.add('hint');
+      setTimeout(() => screen.classList.remove('hint'), 380);
+    }
+  });
+
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeLayers(); });
+
+  /* ---------- 初始化 ---------- */
+  renderTabbars();
+  renderAcc($('#homeAcc'), HOME_ACC);
+  renderAcc($('#infoAcc'), INFO_ACC);
+  renderPick(); renderCombo(true);
+  fillDemo(); // 手動輸入頁預先帶入範例序號與密碼，正向流程可直接按「立即綁定」
+})();
+</script>
+</body>
+</html>

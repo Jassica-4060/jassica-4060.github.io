@@ -13,6 +13,7 @@ date: "2026.03"
 skills: [資訊架構, RWD, 中英雙語]
 cover: /covers/workshub-site.svg
 template: true
+draft: true # 已併入 04「CoolBe 官網建置與產品網站延伸」，先隱藏不顯示
 ---
 
 ## 背景與問題

@@ -37,6 +37,24 @@ Figma MCP 免費版每月只有 20 次呼叫，用完就不能讀寫 Figma。這
 3. 舊稿裡的兩張插圖（圖層名稱 `Bot-1v1-Handoff`、950×154 的 `Group 1`）會自動複製到新稿對應位置。
 4. 再跑一次③只會重畫 v2 這張，不影響其他稿。
 
+## ④ 只產生「漸進式訊息」案例頁（不覆蓋其他稿）
+
+1. Figma 選單 **Plugins → Development → 作品集 ↔ Figma 同步 → ④ 產生案例頁：漸進式訊息（不覆蓋其他稿）**
+2. 新稿「02b 案例頁｜漸進式訊息｜Desktop 1440（網頁同步）」會畫在 Bot 案例頁（v2，沒有就用舊稿）的**右邊**。
+3. 再跑一次④只會在原位置重畫這張，Bot 一對一和其他稿都不會動。
+
+內容來源：`src/content/cases/02-line-oa-progressive.md`，截圖在 `public/images/Progressive/`。
+
+## ⑤ 只產生「WorksHub+ 設計系統」案例頁（不覆蓋其他稿）
+
+1. Figma 選單 **Plugins → Development → 作品集 ↔ Figma 同步 → ⑤ 產生案例頁：WorksHub+ 設計系統（不覆蓋其他稿）**
+2. 新稿「02c 案例頁｜WorksHub+ 設計系統｜Desktop 1440（網頁同步）」會畫在漸進式訊息案例頁的**右邊**（沒有就接在 Bot 案例頁右邊）。
+3. 再跑一次⑤只會在原位置重畫這張。
+
+內容來源：`src/content/cases/03-workshub-design-system.md`，圖片在 `public/images/worksHub+/logo/`、`shots/`。
+
+要再加其他作品的案例頁：在 `build.mjs` 的 `EXTRA_IDS`、`src/render.js` 的 `EXTRA`、`manifest.json` 的 `menu` 各加一筆。
+
 ## ② Figma → 網頁（回推修改）
 
 1. （只想匯出某一張稿時，先點選那張稿）Figma 選單 **Plugins → Development → 作品集 ↔ Figma 同步 → ② 匯出內容（回推網頁用）**
@@ -71,3 +89,4 @@ Figma MCP 免費版每月只有 20 次呼叫，用完就不能讀寫 Figma。這
 - `build.mjs`：把網站內容打包成 `code.js`（`npm run figma`）
 - `code.js`：打包結果，不要手動改
 - `ui.html`、`manifest.json`：外掛視窗與設定
+- `test/mock-run.cjs`：用模擬的 Figma 環境測試 code.js（`node figma-plugin/test/mock-run.cjs`）

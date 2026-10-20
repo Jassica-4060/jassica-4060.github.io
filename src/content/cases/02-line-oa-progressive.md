@@ -3,7 +3,7 @@ title: 漸進式訊息
 product: LINE OA 後台
 tier: main
 order: 2
-duration: 5 個工作天
+duration: 5 天
 role: 產品部 UIUX，支援專案處：互動設計、Mockup 與 SPEC 交付
 proves: [跨部門協作, 互動設計, 規格交付]
 summary: 從產品部支援專案處，把 PM 定義好、但很抽象的觸發規則，設計成一看就懂、動手就會設定的流程圖介面。
@@ -11,7 +11,7 @@ category: 產品設計
 kind: SaaS 後台・互動設計
 date: "2024.11"
 skills: [互動設計, 元件設計, 跨部門協作, Figma]
-cover: /covers/progressive.svg
+cover: /images/next-message/step-message-cover.svg
 ---
 
 ## 背景與問題
@@ -66,40 +66,27 @@ cover: /covers/progressive.svg
 <div class="decisions">
   <div class="decision">
     <p class="q">這麼抽象的規則，要用什麼形式呈現？</p>
-    <p class="a">把旅程畫成流程圖：往下代表時間順序，往右代表分支條件。這個概念來自 FigJam 的流程圖。</p>
+    <div class="d-body"><p class="a">把旅程畫成流程圖：往下代表時間順序，往右代表分支條件。<br>這個概念來自 FigJam 的流程圖。</p><img class="d-fig" src="/images/next-message/dv-doc.png" width="93" height="162" loading="lazy" alt="流程圖示意：起始條件「加入好友」往下接「1 天後」的間隔，再接到條件#1"></div>
     <p class="why">畫面簡單；看慣列表的使用者會覺得新鮮；邊操作就能理解怎麼設定，不必依賴操作手冊。</p>
   </div>
   <div class="decision">
     <p class="q">新增按鈕要一直顯示嗎？</p>
-    <p class="a">不要。游標移到條件框或旅程線上時才出現；並用顏色區分單位：條件是藍色，訊息是綠色。</p>
+    <div class="d-body"><p class="a">不要。游標移到條件框或旅程線上時才出現；並用顏色區分單位：條件是藍色，訊息是綠色。</p><img class="d-fig" src="/images/next-message/require.png" width="140" height="65" loading="lazy" alt="條件框 Hover 狀態：藍色外框，右側與下方出現新增箭頭"></div>
     <p class="why">流程和規則越長，按鈕就越多，會造成視覺疲勞和操作阻礙。讓元件跟著操作動線出現，最直覺。</p>
   </div>
   <div class="decision">
     <p class="q">每個條件的設定內容要放在哪裡？</p>
-    <p class="a">左邊是流程畫布，右邊是設定面板。點選哪一個框，右側就展開哪一個框的設定。</p>
+    <div class="d-body"><p class="a">左邊是流程畫布，右邊是設定面板。點選哪一個框，右側就展開哪一個框的設定。</p><img class="d-fig" src="/images/next-message/filter.png" width="112" height="184" loading="lazy" alt="右側設定面板：編輯觸發條件，條件類型選「加入好友」，並指定 2025-01-01 到 2025-12-31 的區間"></div>
     <p class="why">看著流程就能馬上改對應的設定，不用切換視窗，一個螢幕完成所有設定。</p>
   </div>
-  <div class="decision">
+  <div class="decision is-wide">
     <p class="q">拖曳受技術限制、只能橫向，怎麼設計？</p>
     <p class="a">只支援同一層的條件左右拖曳；只有右側有其他條件時，才顯示拖曳圖示。</p>
     <p class="why">這是技術限制。拖曳圖示只出現在真的能拖的地方，使用者就不會去嘗試做不到的操作。</p>
   </div>
 </div>
 
-## 把規格轉成看得見的限制
-
-PM 規格中的限制條件，我一條一條對應到介面上，讓使用者在操作的當下就知道邊界在哪：
-
-| 規則 | 介面上怎麼呈現 |
-|---|---|
-| 同時最多啟用 5 個旅程 | 列表頁上方直接寫出限制；超過時跳出提示，新的旅程維持關閉，等其他旅程結束後再手動開啟 |
-| 一個旅程最多 10 個條件（含起始條件）、10 則訊息 | 旅程設定標題即時顯示「觸發條件 N 筆／傳送訊息 N 筆」；達到上限後，新增按鈕變成 Disable |
-| 間隔時間最小單位是「天」 | 間隔用「−　1 天後　＋」調整天數，不提供分鐘、小時（SI 主機負載考量） |
-| 刪除條件會一併刪除下方訊息與右側分支 | 刪除前先跳出確認，說明會連帶刪除的內容 |
-| 旅程期間內不能編輯 | 旅程期間內鎖定設定，無法編輯 |
-| 發送數量每日重新計算 | 「已發送訊息數」旁加上提示：系統每日白天重新計算數量 |
-
-### 把規格轉成啟用前的檢核流程
+## 把規格轉成啟用前的檢核流程
 
 規格中定義了哪些情況不能啟用。我把它們整理成按下「啟用」時依序執行的檢核，並為沒通過的情況設計提示：
 
@@ -217,7 +204,7 @@ PM 規格中的限制條件，我一條一條對應到介面上，讓使用者�
   <div class="oc-stats" role="list" aria-label="專案成果">
     <div class="oc-stat" role="listitem"><p class="oc-num">5<span>天</span></p><strong>從需求簡報到交付</strong><p>跨部門支援，完成互動設計、Mockup 與 SPEC</p></div>
     <div class="oc-stat" role="listitem"><p class="oc-num">3<span>種</span></p><strong>新增的流程元件</strong><p>條件框、訊息框、旅程線，各 4 種狀態</p></div>
-    <div class="oc-stat" role="listitem"><p class="oc-num">已上線</p><strong>功能正式上線</strong><p>成為 LINE OA 後台的漸進式訊息模組</p></div>
+    <div class="oc-stat" role="listitem"><p class="oc-num">ON</p><strong>功能正式上線</strong><p>成為 LINE OA 後台的漸進式訊息模組</p></div>
   </div>
   <p class="oc-reuse">這是導入 AI 之前的作品。之後的「<a href="/work/01-bot-1v1/">Bot 一對一真人服務</a>」，則是用 AI 加速同一套「需求 → 介面 → 規格」的流程。</p>
 </div>

@@ -1,5 +1,5 @@
 ---
-title: 公司官網從 0 到 1
+title: CoolBe 官網建置與產品網站延伸
 product: CoolBe 公司官網
 tier: side
 order: 4
@@ -7,10 +7,11 @@ duration: 2 季
 role: 獨立負責網站設計與部署執行
 proves: [完整交付, 網站設計]
 summary: 將網站設計落實成可在線上瀏覽的成果，呈現從設計到部署的完整執行能力。
+excerpt: 從公司官網主視覺到 WorksHub+ 產品官網，在 Wix 上完成設計與建置，並於產品網站導入 AI 輔助，逐步打造完整的品牌與產品展示體驗。
 category: 網頁設計
-kind: 企業官網
+kind: 企業與產品官網
 date: "2024.10"
-skills: [RWD, 網站規劃, 前端部署]
+skills: [網站設計, Wix建置, AI協作]
 cover: /covers/coolbe-website.svg
 template: true
 ---

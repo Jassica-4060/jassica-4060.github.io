@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token v2 差異說明</title>
+<style>
+:root{--bg:#E6EBF0;--panel:#FFFFFF;--border:#D7DEE5;--text:#24313D;--title:#0F2740;--muted:#617285;--subtle:#EEF2F5;--accent:#348BDD;--warn-bg:#FFF4E0;--warn:#9A5B00;--ok-bg:#DDF7F1;--ok:#0D7A65;--del-bg:#FDECEC;--del:#C0353A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171B;--panel:#1E2227;--border:#2B3037;--text:#D5DBE2;--title:#F1F4F7;--muted:#8E98A4;--subtle:#252A30;--accent:#5FA8EB;--warn-bg:#3A2C12;--warn:#F2C26B;--ok-bg:rgba(51,209,178,.13);--ok:#5FE0C6;--del-bg:rgba(255,107,107,.12);--del:#FF8A8A}}
+:root[data-theme="dark"]{--bg:#14171B;--panel:#1E2227;--border:#2B3037;--text:#D5DBE2;--title:#F1F4F7;--muted:#8E98A4;--subtle:#252A30;--accent:#5FA8EB;--warn-bg:#3A2C12;--warn:#F2C26B;--ok-bg:rgba(51,209,178,.13);--ok:#5FE0C6;--del-bg:rgba(255,107,107,.12);--del:#FF8A8A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 "Noto Sans TC",system-ui,sans-serif;padding:32px 16px}
+main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px 28px}
+h1{margin:0 0 4px;font-size:26px;color:var(--title)}
+h2{margin:0 0 12px;font-size:18px;color:var(--title)}
+p{margin:0 0 10px}.muted{color:var(--muted);font-size:13.5px}
+.tbl{width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+th{text-align:left;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+code{font:12.5px ui-monospace,Menlo,monospace;background:var(--subtle);padding:1px 6px;border-radius:6px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.12)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:0 9px;line-height:22px;border-radius:999px;white-space:nowrap}
+.t-chg{background:var(--subtle);color:var(--accent)}.t-new{background:var(--ok-bg);color:var(--ok)}.t-del{background:var(--del-bg);color:var(--del)}.t-tbd{background:var(--warn-bg);color:var(--warn)}
+ul{margin:0;padding-left:20px}li{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<section class="card">
+  <h1>Design Token v2(圓角版)差異說明</h1>
+  <p class="muted">來源：WorksHub-圓角版.html ・ 對照基準：線上 dev 後台 index-Dnj-hRg-.css(與 v1 tokens.json 完全一致)・ 2026-10-02 ・ Jessica Huang</p>
+  <p>新檔 <code>tokens.json</code> 沿用 v1 結構，可直接取代。主要變動：<b>品牌藍換色、中性色整套重做、控制元件改膠囊圓角、移除紫色、版面改成浮起卡片</b>。</p>
+  <p><span class="tag t-chg">改值</span> <span class="tag t-new">新增</span> <span class="tag t-del">移除</span> <span class="tag t-tbd">設計決議</span></p>
+</section>
+
+<section class="card">
+  <h2>1. 會造成程式破壞的變動(請先處理)</h2>
+  <ul>
+    <li><span class="tag t-del">移除</span> <b>取消主題色切換</b>,只保留淺色 / 深色兩種模式。<code>themes</code>(blue / green / purple)整組移除，改為單一的 <code>accent.light</code> / <code>accent.dark</code>。前端的主題清單 <code>['blue','green','purple']</code>、NaiveUI 各主題的 themeOverrides、header 的「主題色」按鈕都可以拿掉；使用者已存的主題偏好可直接忽略。</li>
+    <li><span class="tag t-chg">改值</span> <code>radius.sm / md</code> 由 2px / 3px 改為 <code>9999px</code>。NaiveUI 的 <code>common.borderRadius</code> 會影響 Card、Modal、Dialog、Popover、Dropdown、Tag,以及彈窗內的 Input / Select,請在 themeOverrides 或元件層另外覆寫(見第 4 節)。</li>
+    <li><span class="tag t-new">新增</span> 主要按鈕專用色 <code>button.primary-bg</code>(#2B7BC9),比主色深一階。請用 NaiveUI Button 的 themeOverrides 覆寫，<b>不要改 common.primaryColor</b>(否則選單選中、勾選框、開關、連結也會跟著變)。</li>
+    <li><span class="tag t-new">新增</span> <code>$type: "shadow"</code> 與 <code>"gradient"</code>,<code>$value</code> 為 CSS 字串，<code>tokens:build</code> 腳本需支援輸出。</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>2. 主色(不再提供主題切換)</h2>
+  <div class="tbl"><table>
+    <tr><th>v2 Token</th><th>v1 對應</th><th>v1 值</th><th>v2 值</th><th>備註</th></tr>
+    <tr><td><code>accent.light.accent</code></td><td><code>themes.blue.light.accent</code></td><td><span class="sw" style="background:#007bff"></span>#007bff</td><td><span class="sw" style="background:#348BDD"></span>#348BDD</td><td><span class="tag t-chg">改值</span></td></tr>
+    <tr><td><code>accent.light.primary-hover</code></td><td><code>themes.blue.light.primary-hover</code></td><td>#2693ff(變亮)</td><td><span class="sw" style="background:#2B7BC9"></span>#2B7BC9(變深)</td><td><span class="tag t-chg">改值</span> hover 方向依設計稿反轉</td></tr>
+    <tr><td><code>accent.light.primary-pressed</code></td><td><code>themes.blue.light.primary-pressed</code></td><td>#0066dd</td><td>#266CB1</td><td>推導</td></tr>
+    <tr><td><code>accent.dark.accent</code></td><td><code>themes.blue.dark.accent</code></td><td>#2693ff</td><td>#5FA8EB</td><td>暗色選中底色仍用 #348BDD</td></tr>
+    <tr><td><code>accent.*.accent-strong / accent-icon</code></td><td>—</td><td>—</td><td>#124479 / #348BDD(暗 #8CC4F2 / #5FA8EB)</td><td><span class="tag t-new">新增</span> 子項被選中時的父選單文字與 icon</td></tr>
+    <tr><td><code>button.primary-bg / -hover / -pressed</code></td><td>—</td><td>—</td><td><span class="sw" style="background:#2B7BC9"></span>#2B7BC9 / #266CB1 / #215F9C</td><td><span class="tag t-tbd">設計決議</span> 只套主要按鈕，淺色深色同值；白字對比 4.39 / 5.44 / 6.60</td></tr>
+    <tr><td>—</td><td><code>themes.green</code></td><td><span class="sw" style="background:#7c9e2e"></span>#7c9e2e</td><td>—</td><td><span class="tag t-del">移除</span></td></tr>
+    <tr><td>—</td><td><code>themes.purple</code></td><td><span class="sw" style="background:#7c3aed"></span>#7c3aed</td><td>—</td><td><span class="tag t-del">移除</span></td></tr>
+  </table></div>
+</section>
+
+<section class="card">
+  <h2>3. 中性色與語意色(light)</h2>
+  <p class="muted">dark 值見 JSON。v1 的 6 個 key 保留但換值，其餘為新增。</p>
+  <div class="tbl"><table>
+    <tr><th>Token</th><th>v1</th><th>v2</th><th>用在哪</th></tr>
+    <tr><td><code>shell-bg</code></td><td>#f6f7f9</td><td><span class="sw" style="background:#E6EBF0"></span>#E6EBF0</td><td>最外層畫布</td></tr>
+    <tr><td><code>surface</code></td><td>#ffffff</td><td>#FFFFFF</td><td>主內容卡片</td></tr>
+    <tr><td><code>border</code></td><td>#e5e7eb</td><td><span class="sw" style="background:#D7DEE5"></span>#D7DEE5</td><td>面板、卡片、彈窗外框</td></tr>
+    <tr><td><code>text-primary</code></td><td>#111827</td><td><span class="sw" style="background:#24313D"></span>#24313D</td><td>一般內文</td></tr>
+    <tr><td><code>text-secondary</code></td><td>#4b5563</td><td><span class="sw" style="background:#617285"></span>#617285</td><td>次要文字</td></tr>
+    <tr><td><code>text-muted</code></td><td>#9ca3af</td><td><span class="sw" style="background:#7F8C9A"></span>#7F8C9A</td><td>分組標題、表頭</td></tr>
+    <tr><td colspan="4"><span class="tag t-new">新增</span> <code>panel</code> <code>text-title</code> <code>placeholder</code> <code>nav-item-text</code> <code>nav-item-icon</code> <code>nav-sub-text</code> <code>nav-guide</code> <code>header-icon</code> <code>hover</code> <code>subtle-bg</code> <code>section-bg</code> <code>section-border</code> <code>row-border</code> <code>row-hover</code> <code>input-bg</code> <code>input-border</code> <code>secondary-bg</code> <code>secondary-text</code> <code>modal-bg</code> <code>overlay</code></td></tr>
+    <tr><td><code>danger</code></td><td>#dc2626</td><td><span class="sw" style="background:#E5484D"></span>#E5484D</td><td>hover/pressed 為推導值</td></tr>
+    <tr><td><code>success</code></td><td>#16a34a</td><td><span class="sw" style="background:#19B395"></span>#19B395</td><td>改為品牌青綠系；新增 success-bg / success-text</td></tr>
+    <tr><td><code>brand.*</code></td><td>—</td><td><span class="sw" style="background:#33D1B2"></span>#33D1B2 系列</td><td><span class="tag t-new">新增</span> 子選單選中態、日期 icon</td></tr>
+    <tr><td><code>category.*</code>(9 種訊息分類色)</td><td>—</td><td>不變</td><td><span class="tag t-tbd">設計決議</span> 影片保留紫色 violet-500</td></tr>
+  </table></div>
+</section>
+
+<section class="card">
+  <h2>4. 圓角(規則：按鈕與篩選元件膠囊，其餘照圓角版設計稿)</h2>
+  <div class="tbl"><table>
+    <tr><th>元件</th><th>現況</th><th>v2</th><th>Token</th></tr>
+    <tr><td>Button(主要/次要)</td><td>3px</td><td>膠囊</td><td><code>radius.pill</code>,NaiveUI 可直接用 <code>round</code></td></tr>
+    <tr><td>Input / Select(篩選列)</td><td>3px</td><td>膠囊</td><td><code>radius.pill</code></td></tr>
+    <tr><td>Input / Select(彈窗內)</td><td>3px</td><td>12px</td><td><code>radius.input-modal</code> <span class="tag t-tbd">設計決議</span></td></tr>
+    <tr><td>Badge(狀態「使用中」)</td><td>2px</td><td>膠囊</td><td><code>radius.pill</code></td></tr>
+    <tr><td>Tag(角色標籤)</td><td>2px</td><td>8px</td><td><code>radius.tag</code> <span class="tag t-tbd">設計決議</span></td></tr>
+    <tr><td>表格操作 icon 按鈕(編輯/刪除，34×34)</td><td>—</td><td>10px 圓角方塊</td><td><code>radius.icon-button</code> <span class="tag t-tbd">設計決議</span></td></tr>
+    <tr><td>Header icon 按鈕(收合/深淺色，36×36)</td><td>—</td><td>8px 圓角方塊</td><td><code>radius.icon-button-header</code> <span class="tag t-tbd">設計決議</span></td></tr>
+    <tr><td>彈窗關閉鈕、使用者頭像</td><td>—</td><td>正圓</td><td><code>radius.circle</code></td></tr>
+    <tr><td>側欄選單項目 / 子項目</td><td>—</td><td>10px / 8px</td><td><code>radius.nav-item</code> / <code>nav-sub-item</code></td></tr>
+    <tr><td>成員頭像</td><td>圓形</td><td>12px 圓角方形</td><td><code>radius.avatar</code></td></tr>
+    <tr><td>篩選列、空狀態區塊</td><td>—</td><td>14px</td><td><code>radius.section</code></td></tr>
+    <tr><td>Card(側欄、主內容)</td><td>NaiveUI 預設</td><td>16px</td><td><code>radius.card</code> → Card <code>borderRadius</code></td></tr>
+    <tr><td>Modal / Dialog</td><td>NaiveUI 預設</td><td>20px</td><td><code>radius.modal</code> → Modal/Dialog <code>borderRadius</code></td></tr>
+    <tr><td>Dropdown / Select 選項框、Popover / Tooltip</td><td>NaiveUI 預設</td><td>12px</td><td><code>radius.popover</code> <span class="tag t-tbd">設計決議</span> 設計稿未畫</td></tr>
+  </table></div>
+</section>
+
+<section class="card">
+  <h2>5. 版面、陰影、漸層與其他視覺差異</h2>
+  <ul>
+    <li><b>版面結構</b>:header(68px)橫跨整排、沒有底線；下方側欄與主內容各自是浮起的圓角卡片，間距與外距 16px。側欄寬 220 → <b>240px</b>,收合 64px。</li>
+    <li><b>選單選中態</b>:v1 左側 3px 色條 → v2 整塊主色底 + 白字 + <code>shadow.accent</code> 光暈；子項選中改青綠底。分組標題前加 6px 青綠小方塊。</li>
+    <li><b>Header</b>:收合／深淺色 icon 按鈕包成一個群組框(設計稿的「主題色」按鈕因取消主題切換而移除);日期與使用者區塊改成獨立的膠囊框，頭像用 <code>gradient.brand</code>。</li>
+    <li><b>麵包屑</b>:改成 26px 高的膠囊(<code>subtle-bg</code>)。</li>
+    <li><b>空狀態</b>:白卡陰影 → <code>section-bg</code> 底 + 1.5px 虛線框(<code>section-border</code>),icon 用品牌漸層。</li>
+    <li><b>表格</b>:表頭不再有底色，改純文字 + 細線；操作欄按鈕有 <code>secondary-bg</code> 底，hover 時編輯變主色、刪除變 danger。</li>
+    <li><b>彈窗</b>:遮罩加 <code>backdrop-filter: blur(3px)</code>,標題前加漸層 icon,關閉鈕為圓形。</li>
+    <li><b>控制元件高度</b> <span class="tag t-new">新增</span>:按鈕 42px(<code>size.button-height</code>)、篩選下拉 40px(<code>size.input-height-filter</code>)、彈窗輸入框 46px(<code>size.input-height-modal</code>),兩種輸入框刻意不同高。</li>
+    <li><b>不變</b>:chart 色盤、9 個訊息分類色(含影片紫色)、字級 text-2xs、min-width 1280、avatar-lg 64。</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>6. 設計決議紀錄(2026-10-02 拍板，目前沒有待確認項目)</h2>
+  <ul>
+    <li>取消主題色切換，只保留淺色 / 深色兩種模式；header 的「主題色」按鈕移除。</li>
+    <li>訊息分類色「影片」保留紫色 violet-500。</li>
+    <li>彈窗輸入框 12px、角色標籤 8px、表格操作按鈕 10px、header icon 按鈕 8px、彈窗關閉鈕正圓，皆照設計稿保留。</li>
+    <li>Dropdown / Popover 等浮出框用 12px 圓角。</li>
+    <li>按鈕與輸入框高度不需統一：按鈕 42px、篩選下拉 40px、彈窗輸入框 46px。</li>
+    <li>只有主要按鈕加深成 #2B7BC9(白字對比 3.57 → 4.39),hover #266CB1、按下 #215F9C;選單選中、勾選框、開關、連結維持主色 #348BDD。</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>

@@ -10,7 +10,7 @@ const d = entry.data;
   <a class="hit" href={`/work/${entry.id}/`} aria-label={`閱讀作品：${d.title}`}></a>
   <div class="cover">
     {d.cover
-      ? <img src={d.cover} alt="" loading="lazy" />
+      ? <img class:list={[{ contain: d.coverFit === 'contain' }]} src={d.cover} alt="" loading="lazy" />
       : <span class="cover-ph" aria-hidden="true">作品圖檔<br />（建議 16:10）</span>}
   </div>
   <div class="body">
@@ -19,7 +19,7 @@ const d = entry.data;
       <span class="kind">{d.kind}</span>
     </div>
     <h3>{d.title}{d.template && <span class="tpl">範本</span>}</h3>
-    <p class="summary">{d.summary}</p>
+    <p class="summary">{d.excerpt ?? d.summary}</p>
     <ul class="skills" aria-label="使用技能">
       {d.skills.map((s) => <li>#{s}</li>)}
     </ul>
@@ -40,6 +40,7 @@ const d = entry.data;
   .cover { aspect-ratio: 16 / 10; border-radius: calc(var(--radius) * 0.6); overflow: hidden; border: 1.5px solid var(--line); background: color-mix(in srgb, var(--ink) 6%, var(--paper)); }
   .cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease); }
   .work-card:hover .cover img { transform: scale(1.04); }
+  .cover img.contain { object-fit: contain; }
   .cover-ph {
     width: 100%; height: 100%; display: grid; place-items: center; text-align: center;
     font-size: 0.9rem; font-weight: 700; color: var(--ink-soft);
@@ -47,13 +48,12 @@ const d = entry.data;
   }
 
   .body { display: flex; flex-direction: column; gap: 12px; padding-block: 4px; min-width: 0; }
-  .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--ink-soft); }
+  .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--slate); }
   h3 { font-size: clamp(1.5rem, 2.4vw, 2.1rem); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
   .tpl { font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; border: 1.5px dashed var(--ink); font-weight: 700; }
   .summary { margin: 0; color: var(--ink-soft); }
   .skills { list-style: none; padding: 0; margin: auto 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
   .skills li { padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; border: 1.5px solid var(--ink); }
-  .skills li:first-child { background: var(--ink); color: var(--paper); }
 
   @media (max-width: 600px) {
     .work-card { grid-template-columns: 1fr; }

@@ -448,6 +448,30 @@ function buildStates(root) {
 
 // ───────── 02 案例頁 ─────────
 const SEC = { n: 0 };
+// 放一張圖：寬度 Fill，高度依原比例；沒有圖就畫佔位框
+function picture(parent, src, w, name, o = {}) {
+  const vec = src && DATA.svgs && DATA.svgs[src];
+  if (vec) { // SVG：畫成可編輯的向量，依寬度等比縮放
+    const n = svg(vec, `Vector｜${src.split('/').pop()}`, w);
+    const holder = add(parent, F(`${name}｜${src.split('/').pop()}`, { main: 'CENTER', cross: 'CENTER' }), { w: o.fixed ? w : 'fill', h: Math.max(1, Math.round(n.height)) });
+    holder.appendChild(n);
+    return holder;
+  }
+  const pic = src && DATA.images && DATA.images[src];
+  if (!pic) {
+    const ph = add(parent, F(`${name}｜佔位`, { main: 'CENTER', cross: 'CENTER', pad: 24, radius: o.radius || 14, fill: 'ink6', stroke: 'ink', strokeOpacity: 0.18 }), { w: 'fill', h: Math.round(w * 9 / 16) });
+    add(ph, T(o.ph || '畫面待補', { key: o.key || 'Deco｜佔位', weight: 700, color: 'inkSoft', align: 'CENTER' }));
+    return ph;
+  }
+  const img = figma.createImage(figma.base64Decode(pic.b64));
+  const f = add(parent, F(`${name}｜${src.split('/').pop()}`, { radius: o.radius || 14, stroke: o.stroke || 'ink', strokeOpacity: o.strokeOpacity == null ? 0.18 : o.strokeOpacity, sw: o.sw || 2, clip: true, effects: o.effects }), { w: 'fill', h: Math.round(w * pic.h / pic.w) });
+  f.fills = o.bg === false ? [{ type: 'IMAGE', scaleMode: 'FIT', imageHash: img.hash }] : [{ type: 'SOLID', color: rgb('#ffffff') }, { type: 'IMAGE', scaleMode: 'FIT', imageHash: img.hash }];
+  return f;
+}
+function cssGradient(bg) { // linear-gradient(135deg,#A,#B) → Figma 斜向漸層
+  const c = bg.match(/#[0-9a-f]{6}/gi) || ['#cccccc', '#999999'];
+  return { type: 'GRADIENT_LINEAR', gradientTransform: [[0.5, 0.5, 0], [-0.5, 0.5, 0.5]], gradientStops: c.map((h, i) => ({ position: i / (c.length - 1), color: Object.assign(rgb(h), { a: 1 }) })) };
+}
 const ILLUS = { handoff: null, team: null }; // ③ 產生新版時，從舊案例頁複製過來的手繪插圖
 function proseBlock(prose, b, k) {
   const fill = { w: 'fill' };
@@ -514,11 +538,18 @@ function proseBlock(prose, b, k) {
     case 'decisions': {
       const g = add(prose, F('Decisions｜決策卡', { dir: 'H', gap: 14 }), { w: 'fill', wrap: true, rowGap: 14 });
       b.items.forEach((d, i) => {
-        const card = add(g, F(`Decision｜${i + 1}`, { gap: 10, pad: [18, 20], radius: 16, stroke: 'ink' }), { w: 'fill', minW: 320 });
-        add(card, T(d.q, { key: `${k}.${i}.q`, weight: 900 }), fill);
-        const a = add(card, F('Answer', { pad: [0, 0, 0, 12], stroke: 'accent', sw: 4, sides: 'L' }), fill);
+        const card = add(g, F(`Decision｜${i + 1}`, { gap: 10, pad: [18, 20], radius: 16, stroke: 'ink' }), { w: 'fill', minW: d.wide ? 1000 : 320 });
+        const box = d.wide ? add(card, F('Text', { gap: 10 }), { w: 'fill', maxW: 718 }) : card;
+        add(box, T(d.q, { key: `${k}.${i}.q`, weight: 900 }), fill);
+        const body = d.img ? add(box, F('Body', { dir: 'H', gap: 10 }), fill) : box;
+        const a = add(body, F('Answer', { pad: [0, 0, 0, 12], stroke: 'accent', sw: 4, sides: 'L' }), fill);
         add(a, T(d.a, { key: `${k}.${i}.a`, weight: 500 }), fill);
-        add(card, T(`**理由｜**${d.why}`, { key: `${k}.${i}.why`, size: 14.4, color: 'inkSoft', rich: true, boldStyle: 'Bold' }), fill);
+        const pic = d.img && DATA.images && DATA.images[d.img];
+        if (pic) {
+          const img = figma.createImage(figma.base64Decode(pic.b64));
+          add(body, F(`Figure｜${d.img.split('/').pop()}`, { image: { type: 'IMAGE', scaleMode: 'FIT', imageHash: img.hash } }), { w: d.imgW, h: d.imgH });
+        }
+        add(box, T(`**理由｜**${d.why}`, { key: `${k}.${i}.why`, size: 14.4, color: 'inkSoft', rich: true, boldStyle: 'Bold' }), fill);
       });
       break;
     }
@@ -536,15 +567,31 @@ function proseBlock(prose, b, k) {
       });
       break;
     }
-    case 'split': { // 左圖右文
-      const row = add(prose, F('Split｜左圖右文', { dir: 'H', gap: 24 }), fill);
-      const W1 = 587;
-      if (ILLUS.handoff) { const n = ILLUS.handoff; ILLUS.handoff = null; row.appendChild(n); n.rescale(W1 / n.width); n.name = 'Illustration｜Bot-1v1-Handoff'; }
-      else { const ph = add(row, F('Figure｜示意圖佔位', { main: 'CENTER', cross: 'CENTER', pad: 24, radius: 20, fill: 'ink6', stroke: 'ink', strokeOpacity: 0.18 }), { w: W1, h: Math.round(W1 * 371 / 599) }); add(ph, T(b.ph, { key: `${k}.ph`, weight: 700, color: 'inkSoft', align: 'CENTER' }), { w: 'fill' }); }
+    case 'split': { // 左圖右文（is-origin = 左文右圖）
+      const row = add(prose, F(b.textFirst ? 'Split｜左文右圖' : 'Split｜左圖右文', { dir: 'H', gap: 24, cross: b.textFirst ? 'CENTER' : 'MIN' }), fill);
+      const W1 = b.textFirst ? 427 : 587;
+      const media = () => {
+        if (ILLUS.handoff && !b.textFirst) { const n = ILLUS.handoff; ILLUS.handoff = null; row.appendChild(n); n.rescale(W1 / n.width); n.name = 'Illustration｜Bot-1v1-Handoff'; }
+        else if (b.img && DATA.images && DATA.images[b.img]) { const col = add(row, F('Media', {}), { w: W1 }); picture(col, b.img, W1, 'Image', { radius: 16, strokeOpacity: 0 }); }
+        else { const ph = add(row, F('Figure｜示意圖佔位', { main: 'CENTER', cross: 'CENTER', pad: 24, radius: 20, fill: 'ink6', stroke: 'ink', strokeOpacity: 0.18 }), { w: W1, h: Math.round(W1 * 371 / 599) }); add(ph, T(b.ph, { key: `${k}.ph`, weight: 700, color: 'inkSoft', align: 'CENTER' }), { w: 'fill' }); }
+      };
+      if (!b.textFirst) media();
       const txt = add(row, F('Text', { gap: 18 }), fill);
-      b.paras.forEach((t, i) => add(txt, T(t, { key: `${k}.${i}`, rich: true }), fill));
+      (b.parts && b.parts.length ? b.parts : b.paras.map((text) => ({ type: 'p', text }))).forEach((part, i) => proseBlock(txt, part, `${k}.${i}`));
+      if (b.textFirst) media();
       break;
     }
+    case 'row': { // 左邊文字／表格，右邊圖或色階並排
+      const isRule = b.kind === 'rule-map';
+      const row = add(prose, F(isRule ? 'Row｜對照表＋LOGO' : 'Row｜文字＋色階', { dir: 'H', gap: 18, cross: isRule ? 'CENTER' : 'MIN' }), fill);
+      const left = add(row, F('Text', { gap: 18 }), fill);
+      b.parts.forEach((part, i) => proseBlock(left, part, `${k}.${i}`));
+      if (b.side && b.side.type === 'img') {
+        if ((DATA.images && DATA.images[b.side.img]) || (DATA.svgs && DATA.svgs[b.side.img])) { const col = add(row, F('Media', {}), { w: 368 }); picture(col, b.side.img, 368, 'Image', { strokeOpacity: 0 }); }
+      } else if (b.side) { const col = add(row, F('Side', {}), fill); proseBlock(col, b.side, `${k}.side`); }
+      break;
+    }
+
     case 'principle': {
       const box = add(prose, F('Principle｜排序原則', { pad: [14, 18], fill: 'ink6', stroke: 'accent', sw: 6, sides: 'L' }), fill);
       box.topLeftRadius = 0; box.bottomLeftRadius = 0; box.topRightRadius = 12; box.bottomRightRadius = 12;
@@ -669,6 +716,7 @@ function proseBlock(prose, b, k) {
           }
         });
       };
+      if (b.row) { rowOf(b.cards.map((_, i) => i), '→'); break; }
       rowOf([0, 1, 2], '→');
       if (b.cards.length > 3) {
         const x = MAXW - Math.round(CW / 2);
@@ -719,6 +767,102 @@ function proseBlock(prose, b, k) {
       add(o, T(b.note, { key: `${k}.note`, size: 14.8, color: 'inkSoft' }), fill);
       break;
     }
+    case 'logofinal': { // 正式 LOGO：淺／深兩款橫式＋概念拆解（C ＆ B ＆ ＋ ＝ 完整圖形）
+      const g = add(prose, F('LogoFinal｜正式 LOGO', { gap: 56, pad: [6, 0, 14, 0] }), fill);
+      const tiles = add(g, F('Tiles', { dir: 'H', gap: 56 }), { w: 'fill', wrap: true, rowGap: 24 });
+      const TW = Math.round((MAXW - 56) / 2);
+      b.tiles.forEach((t) => {
+        const tile = add(tiles, F(`Tile｜${t.dark ? '深色' : '淺色'}`, { main: 'CENTER', cross: 'CENTER', pad: [Math.round(TW * 0.08), Math.round(TW * 0.1)], fill: t.dark ? '#000000' : '#ffffff' }), { w: 'fill', minW: 400, h: Math.round(TW * 264 / 588) });
+        picture(tile, t.img, Math.round(TW * 0.8), 'Image', { strokeOpacity: 0, radius: 0, bg: false });
+      });
+      const row = add(g, F('Concept｜概念拆解', { dir: 'H', gap: 24, main: 'CENTER' }), fill);
+      const BOX = 120;
+      let n = 0;
+      b.parts.forEach((p) => {
+        if (p.op != null) {
+          const op = add(row, F('Op', { main: 'CENTER', cross: 'CENTER' }), { h: BOX });
+          add(op, T(p.op, { key: 'Deco｜運算符號', size: 38.4, weight: 900, lh: 1 }));
+          return;
+        }
+        const part = add(row, F(`Part｜${p.label || '完整圖形'}`, { gap: 18, cross: 'CENTER' }));
+        const box = add(part, F('Box', { main: 'CENTER', cross: 'CENTER' }), { w: BOX, h: BOX });
+        const vec = DATA.svgs && DATA.svgs[p.img];
+        if (vec) box.appendChild(svg(vec, `Vector｜${p.img.split('/').pop()}`, Math.round(BOX * p.w / 107)));
+        if (p.label) add(part, T(p.label, { key: `${k}.${n}.label`, size: 24, weight: 900, lh: 1.4, align: 'CENTER' }));
+        n++;
+      });
+      break;
+    }
+    case 'logos': { // LOGO 提案：兩欄，選定的那張加粗框＋黃色陰影
+      const g = add(prose, F('Logos｜LOGO 提案', { dir: 'H', gap: 14, pad: [6, 0] }), { w: 'fill', wrap: true, rowGap: 14 });
+      const CW = Math.round((MAXW - 14) / 2);
+      b.items.forEach((it, i) => {
+        const f = add(g, F(`Logo｜${i + 1}${it.picked ? '（選定）' : ''}`, { gap: 8 }), { w: 'fill', minW: 400 });
+        picture(f, it.img, CW, 'Image', it.picked ? { stroke: 'ink', strokeOpacity: 1, sw: 3, effects: [shadow(6, 6, 0, HEX.accent, 1)] } : {});
+        add(f, T(it.caption, { key: `${k}.${i}.caption`, size: 15.8, weight: it.picked ? 900 : 400, color: it.picked ? 'ink' : 'inkSoft', rich: true }), fill);
+      });
+      break;
+    }
+    case 'compare': { // 兩張並排對照＋圖說
+      const g = add(prose, F('Compare｜對照', { dir: 'H', gap: 16, pad: [6, 0, 14, 0] }), { w: 'fill', wrap: true, rowGap: 16 });
+      const CW = Math.round((MAXW - 16) / 2);
+      b.items.forEach((it, i) => {
+        const f = add(g, F(`Figure｜${i + 1}`, { gap: 8 }), { w: 'fill', minW: 400 });
+        const cap = () => {
+          if (!it.caption && !it.tag) return;
+          const row = add(f, F('Caption', { dir: 'H', gap: 8, cross: 'CENTER' }), { w: 'fill', wrap: true, rowGap: 4 });
+          if (it.tag) { const pl = add(row, F('Tag', { dir: 'H', pad: [2, 10], radius: 999, fill: 'ink' })); add(pl, T(it.tag, { key: `${k}.${i}.tag`, size: 15.8, weight: 900, lh: 1.5, color: '#ffffff' })); }
+          add(row, T(it.caption, { key: `${k}.${i}.caption`, size: 15.8, color: 'inkSoft', rich: true, boldStyle: 'Black' }), it.tag ? {} : fill);
+        };
+        if (it.top) cap();
+        picture(f, it.img, CW, 'Image', { ph: it.ph, key: `${k}.${i}.ph` });
+        if (!it.top) cap();
+      });
+      break;
+    }
+    case 'swatches': { // 色票
+      const g = add(prose, F('Swatches｜品牌色', { dir: 'H', gap: 10, pad: [4, 0] }), { w: 'fill', wrap: true, rowGap: 10 });
+      b.items.forEach((it, i) => {
+        const row = add(g, F(`Swatch｜${it.name}`, { dir: 'H', gap: 10, cross: 'CENTER' }), { w: 'fill', minW: 150 });
+        const chip = add(row, F('Chip', { radius: 10, stroke: 'ink', strokeOpacity: 0.18, sw: 1.5 }), { w: 40, h: 40 });
+        chip.fills = [/gradient/.test(it.bg) ? cssGradient(it.bg) : { type: 'SOLID', color: rgb(it.bg) }];
+        const tx = add(row, F('Text', { gap: 2 }), fill);
+        add(tx, T(it.name, { key: `${k}.${i}.name`, size: 16.2, weight: 900, lh: 1.4 }), fill);
+        add(tx, T(it.code, { key: `${k}.${i}.code`, size: 14.4, color: 'inkSoft', lh: 1.4 }), fill);
+      });
+      break;
+    }
+    case 'layers': { // 背景色階：畫布 → 側欄＋主卡片 → 篩選列 → 次要按鈕
+      const box = add(prose, F('Layers｜背景色階', { gap: 12, pad: 14, radius: 20, fill: b.bg }), fill);
+      const label = (parent, it, i) => {
+        const t = add(parent, F('Name', { gap: 0 }), fill);
+        add(t, T(it.name, { key: `${k}.${i}.name`, size: 15.3, weight: 900, lh: 1.5, color: '#24313d' }), fill);
+        add(t, T(it.code, { key: `${k}.${i}.code`, size: 13.5, weight: 500, lh: 1.5, color: '#617285' }), fill);
+      };
+      let n = 0;
+      if (b.canvas) label(box, b.canvas, n++);
+      const row = add(box, F('Row', { dir: 'H', gap: 12 }), fill);
+      const draw = (parent, ly, depth, top) => {
+        const f = add(parent, F(`Layer｜${ly.name}`, { gap: 12, pad: ly.chip ? [8, 16] : [12, 14], radius: ly.chip ? 999 : 14, fill: ly.bg, stroke: depth > 1 ? '#e0e5ea' : '#d7dee5', sw: 1 }), ly.chip ? {} : { w: top && !b.kids.indexOf(ly) ? Math.round((MAXW - 28 - 12) / 3.8) : 'fill', minH: top ? 220 : 64 });
+        if (top && b.kids.indexOf(ly) > 0) f.layoutSizingHorizontal = 'FILL';
+        label(f, ly, n++);
+        ly.kids.forEach((c) => draw(f, c, depth + 1, false));
+      };
+      b.kids.forEach((ly) => draw(row, ly, 1, true));
+      break;
+    }
+    case 'shot': { // 滿版截圖（is-narrow = 最寬 760）＋圖說
+      const pic = DATA.images && DATA.images[b.img];
+      const fig = add(prose, F(`Shot｜${b.img.split('/').pop()}`, { gap: 8, pad: [8, 0, 14, 0] }), b.narrow ? { w: 'fill', maxW: 760 } : fill);
+      if (pic) {
+        const img = figma.createImage(figma.base64Decode(pic.b64));
+        const w = b.narrow ? Math.min(760, MAXW) : MAXW;
+        const f = add(fig, F('Image', { radius: 20, stroke: 'ink', strokeOpacity: 0.18, clip: true, image: { type: 'IMAGE', scaleMode: 'FIT', imageHash: img.hash }, fill: null }), { w: 'fill', h: Math.round(w * pic.h / pic.w) });
+        f.fills = [{ type: 'SOLID', color: rgb('#ffffff') }, { type: 'IMAGE', scaleMode: 'FIT', imageHash: img.hash }];
+      }
+      if (b.caption) add(fig, T(b.caption, { key: `${k}.caption`, size: 15.3, color: 'inkSoft' }), fill);
+      break;
+    }
     case 'ph': {
       if (b.variant === 'diagram' && ILLUS.team) { const n = ILLUS.team; ILLUS.team = null; prose.appendChild(n); n.name = 'Illustration｜分工圖'; break; }
       const ph = add(prose, F(b.variant === 'diagram' ? 'Figure｜分工圖佔位' : 'Figure｜示意圖佔位（16:9）', { main: 'CENTER', cross: 'CENTER', pad: 24, radius: 20, fill: 'ink6', stroke: 'ink', strokeOpacity: 0.18 }), b.variant === 'diagram' ? { w: 950, h: 154 } : { w: 'fill', h: 427 });
@@ -733,8 +877,8 @@ function proseBlock(prose, b, k) {
     }
   }
 }
-function buildCase(root) {
-  const d = DATA.cases.find((c) => c.id === DATA.caseMain.id);
+function buildCase(root, which = DATA.caseMain) {
+  const d = DATA.cases.find((c) => c.id === which.id);
   const k = `cases.${d.id}`;
   const next = DATA.cases[(DATA.cases.indexOf(d) + 1) % DATA.cases.length];
   header(root);
@@ -762,7 +906,7 @@ function buildCase(root) {
   const body = section(root, 'Section｜案例內文', { pad: [72 - 65, GUTTER, 120, GUTTER] }).wrap;
   const prose = add(body, F('Prose', { gap: 18 }), { w: 'fill', maxW: MAXW });
   SEC.n = 0;
-  DATA.caseMain.blocks.forEach((b, i) => proseBlock(prose, b, `${k}.body.${i}`));
+  which.blocks.forEach((b, i) => proseBlock(prose, b, `${k}.body.${i}`));
   // 下一個案例
   const nx = section(root, 'Section｜下一個案例', { fill: 'ink', pad: [96, GUTTER], gap: 12 }).wrap;
   add(nx, eyebrow('下一個案例', 'case.next', 'paper'));
@@ -938,6 +1082,33 @@ async function buildCaseNew() {
   return `✅ 已產生「${f.name}」${got.length ? `，並複製了${got.join('、')}` : '（沒找到舊稿插圖，先放佔位框）'}。舊稿沒有變動。`;
 }
 
+// ④⑤ 額外案例頁：各自一張稿，畫在前一張案例頁右邊；重跑只重畫自己那張
+const EXTRA = [
+  { cmd: 'case-progressive', id: '02-line-oa-progressive', pf: 'case-progressive', name: '02b 案例頁｜漸進式訊息｜Desktop 1440（網頁同步）', after: ['case2', 'case'] },
+  { cmd: 'case-ds', id: '03-workshub-design-system', pf: 'case-ds', name: '02c 案例頁｜WorksHub+ 設計系統｜Desktop 1440（網頁同步）', after: ['case-progressive', 'case2', 'case'] },
+];
+async function buildCaseExtra(def) {
+  const data = DATA.extras && DATA.extras[def.id];
+  if (!data) throw new Error(`網站裡找不到作品檔 ${def.id}`);
+  await loadFonts();
+  await loadVars();
+  const t = await locate();
+  let f = t.generated.find((g) => g.getPluginData('pf') === def.pf);
+  const ref = def.after.map((key) => t.generated.find((g) => g.getPluginData('pf') === key)).find(Boolean);
+  const isNew = !f;
+  if (isNew) { f = figma.createFrame(); t.container.appendChild(f); }
+  ILLUS.handoff = ILLUS.team = null;
+  resetRoot(f, def.name, def.pf);
+  buildCase(f, data);
+  if (isNew) {
+    if (ref) { f.x = ref.x + ref.width + 200; f.y = ref.y; }
+    else { f.x = Math.max(0, ...t.generated.map((g) => g.x + g.width)) + 200; f.y = 0; }
+  }
+  figma.currentPage.selection = [f];
+  figma.viewport.scrollAndZoomIntoView([f]);
+  return `✅ 已${isNew ? '產生' : '更新'}「${f.name}」，其他稿都沒有變動。`;
+}
+
 // ② 匯出：文字＋排版數值 → JSON
 function hexOf(n) {
   if (!('fills' in n) || n.fills === figma.mixed || !n.fills.length) return undefined;
@@ -997,6 +1168,12 @@ async function doExport() {
 }
 
 (async () => {
+  const extra = EXTRA.find((e) => e.cmd === figma.command);
+  if (extra) {
+    try { figma.closePlugin(await buildCaseExtra(extra)); }
+    catch (e) { figma.closePlugin(`❌ ${e.message}`); }
+    return;
+  }
   if (figma.command === 'case-new') {
     try { figma.closePlugin(await buildCaseNew()); }
     catch (e) { figma.closePlugin(`❌ ${e.message}`); }

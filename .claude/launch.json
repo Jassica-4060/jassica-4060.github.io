@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "portfolio", "runtimeExecutable": "npx", "runtimeArgs": ["astro", "dev", "--port", "4321"], "port": 4321 }
+    { "name": "portfolio", "runtimeExecutable": "npx", "runtimeArgs": ["astro", "dev", "--port", "4321"], "port": 4321 },
+    { "name": "lws-mockup", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "8766", "--directory", "/Users/coolbe/Claude/lws-mockup"], "port": 8766 }
   ]
 }

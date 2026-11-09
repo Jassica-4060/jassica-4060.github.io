@@ -41,6 +41,7 @@ const d = entry.data;
   .cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease); }
   .work-card:hover .cover img { transform: scale(1.04); }
   .cover img.contain { object-fit: contain; }
+  .cover:has(img.contain) { background: var(--paper); } /* 整張顯示時，左右留白用米白，和圖片底色接得起來 */
   .cover-ph {
     width: 100%; height: 100%; display: grid; place-items: center; text-align: center;
     font-size: 0.9rem; font-weight: 700; color: var(--ink-soft);

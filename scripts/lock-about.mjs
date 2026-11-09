@@ -4,6 +4,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { webcrypto as crypto } from 'node:crypto';
 import { marked } from 'marked';
+import { wrapSections } from './about-sections.mjs';
 
 const ITERATIONS = 600_000; // 拖慢每次試密碼的速度
 
@@ -11,7 +12,7 @@ const markdown = await readFile('private/about.md', 'utf8');
 const password = (process.env.ABOUT_PASSWORD ?? (await readFile('private/about-password.txt', 'utf8'))).trim();
 if (!password) throw new Error('找不到密碼：請在 private/about-password.txt 寫入密碼');
 
-const html = await marked.parse(markdown);
+const html = wrapSections(await marked.parse(markdown)); // 依大標題分段，第 2、4 段深藍底
 const salt = crypto.getRandomValues(new Uint8Array(16));
 const iv = crypto.getRandomValues(new Uint8Array(12));
 const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);

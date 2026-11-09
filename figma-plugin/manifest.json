@@ -12,6 +12,9 @@
     { "name": "② 匯出內容（回推網頁用）", "command": "export" },
     { "name": "③ 產生案例頁新版（不覆蓋舊稿）", "command": "case-new" },
     { "name": "④ 產生案例頁：漸進式訊息（不覆蓋其他稿）", "command": "case-progressive" },
-    { "name": "⑤ 產生案例頁：WorksHub+ 設計系統（不覆蓋其他稿）", "command": "case-ds" }
+    { "name": "⑤ 產生案例頁：WorksHub+ 設計系統（不覆蓋其他稿）", "command": "case-ds" },
+    { "name": "⑥ 產生案例頁：品牌 CIS 識別規範（不覆蓋其他稿）", "command": "case-cis" },
+    { "name": "⑦ 產生關於我（解鎖後內容，不覆蓋其他稿）", "command": "about-open" },
+    { "name": "⑧ 提案稿：工作經歷橫向時間軸＋卡片（不覆蓋其他稿）", "command": "about-tl-proposal" }
   ]
 }

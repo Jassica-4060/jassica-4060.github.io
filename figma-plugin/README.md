@@ -22,7 +22,7 @@ Figma MCP 免費版每月只有 20 次呼叫，用完就不能讀寫 Figma。這
 | 01 首頁 | Header、主視覺、自我介紹、角色卡（預設）、工作方式疊卡、作品（產品設計 Tab）、聯絡、Footer |
 | 01b 首頁｜互動狀態 | 三張角色卡 Hover 展開、打字機輪播句子、作品 Tab 切到平面設計／網頁設計 |
 | 02 案例頁 | Bot 一對一真人服務（完整內文） |
-| 03 關於我（鎖定） | 密碼門與聯絡區（解鎖後的內容是私密資料，不放進設計稿） |
+| 03 關於我（鎖定） | 密碼門與聯絡區（解鎖後的內容另外用⑦產生） |
 
 **重跑會覆蓋設計稿。** 在 Figma 改過的內容，要先回推到網頁，再重跑①。
 
@@ -53,6 +53,28 @@ Figma MCP 免費版每月只有 20 次呼叫，用完就不能讀寫 Figma。這
 
 內容來源：`src/content/cases/03-workshub-design-system.md`，圖片在 `public/images/worksHub+/logo/`、`shots/`。
 
+## ⑥ 只產生「品牌 CIS 識別規範」案例頁（不覆蓋其他稿）
+
+1. Figma 選單 **Plugins → Development → 作品集 ↔ Figma 同步 → ⑥ 產生案例頁：品牌 CIS 識別規範（不覆蓋其他稿）**
+2. 新稿「02d 案例頁｜品牌 CIS 識別規範｜Desktop 1440（網頁同步）」會畫在 WorksHub+ 案例頁的**右邊**（沒有就往前找漸進式、Bot 案例頁）。
+3. 再跑一次⑥只會在原位置重畫這張。
+
+內容來源：`src/content/cases/07-brand-cis.md`，目標 icon 在 `public/images/CIS/icon/`。網頁上的 `cis-` 專屬區塊（基本資訊、專案目標卡、工作範圍卡、六項規範圖、延伸作品圖集、待補小標籤）都會畫成 Auto Layout；還沒有素材的地方畫成灰色佔位框，之後在 md 換成 `<img>` 再重跑⑥就會換成圖片。
+
+## ⑦ 只產生「關於我（解鎖後）」（不覆蓋其他稿）
+
+1. Figma 選單 **Plugins → Development → 作品集 ↔ Figma 同步 → ⑦ 產生關於我（解鎖後內容，不覆蓋其他稿）**
+2. 新稿「03b 關於我（解鎖後）｜Desktop 1440（私密・網頁同步）」會畫在「03 關於我（鎖定）」的**右邊**。
+3. 再跑一次⑦只會在原位置重畫這張。
+
+內容來源：`private/about.md`（私密原文，不上傳 GitHub）。工作經歷跟網頁一樣畫成橫向時間軸＋現職的詳細卡片；其他公司的詳細區圖層預設隱藏，打開眼睛即可編輯。 因為打包後的 `code.js` 會含這份私密內容，`code.js` 已列入 `.gitignore`；換電腦時在專案資料夾執行 `npm run figma` 重新產生即可。
+
+公司 logo 在 `public/images/logo/`（對應表在 build.mjs 的 `TL_LOGOS`）。網頁用的是裁掉透明留白的版本 `public/images/logo/trim/`：換了 logo 檔之後執行 `npm run trim-logos` 重新產生。
+
+## ⑧ 提案稿：工作經歷橫向時間軸＋卡片（不覆蓋其他稿）
+
+只畫進 Figma 給 Jessica 評估，網頁不變。會產生兩張稿「03c 提案｜工作經歷橫向時間軸＋卡片」（Desktop 1440、Mobile 375），放在「03b 關於我（解鎖後）」的**下方**；再跑一次只重畫這兩張。內容來自 `private/about.md` 的工作經歷。
+
 要再加其他作品的案例頁：在 `build.mjs` 的 `EXTRA_IDS`、`src/render.js` 的 `EXTRA`、`manifest.json` 的 `menu` 各加一筆。
 
 ## ② Figma → 網頁（回推修改）
@@ -80,6 +102,7 @@ Figma MCP 免費版每月只有 20 次呼叫，用完就不能讀寫 Figma。這
 | `nav.*` | `src/components/Header.astro` |
 | `case.*` | `src/pages/work/[slug].astro` |
 | `about.page.*`、`about.gate.*`、`about.contact.*` | `src/pages/about.astro` |
+| `aboutPrivate.body.<區塊序號>…` | `private/about.md`（改完要 `npm run lock-about` 重新加密，再 `npm run figma`） |
 
 排版數值對照：稿寬 1440、假設視窗高 900；內容區最大寬 1168、左右 56；字級是網頁 `clamp()` 在 1440 寬時的值。
 
@@ -87,6 +110,6 @@ Figma MCP 免費版每月只有 20 次呼叫，用完就不能讀寫 Figma。這
 
 - `src/render.js`：畫稿與匯出的程式（要改外掛改這裡）
 - `build.mjs`：把網站內容打包成 `code.js`（`npm run figma`）
-- `code.js`：打包結果，不要手動改
+- `code.js`：打包結果，不要手動改（含私密內容，不進 git）
 - `ui.html`、`manifest.json`：外掛視窗與設定
 - `test/mock-run.cjs`：用模擬的 Figma 環境測試 code.js（`node figma-plugin/test/mock-run.cjs`）

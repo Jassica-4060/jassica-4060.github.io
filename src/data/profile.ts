@@ -23,8 +23,8 @@ export const profile = {
       '目前在 CoolBe 負責 WorksHub+ 與 LINE OA 等大型 SaaS 後台的產品規劃與介面設計。從需求訪談、規格撰寫，到完成 Design Mockup 與制定 Design System 跟最後驗收，我習慣把整條產品開發鏈走完，以確保品質。',
       '工作之外，我喜歡投資自己，除了在投資以外也喜歡學習新事物。額外的興趣也可拓展我的視野，也可在專業能力上給我加持。因為很多事物的設計都是圍繞在「人本」、「體驗」的感受上。',
     ],
-    // 個人照片：把照片放進 public/about/，再把路徑填進 src（例：/about/me.jpg）；留空 = 顯示佔位框
-    photo: { src: '', alt: '黃思敏的個人照片' },
+    // 個人照片：去背貼紙版（透明背景＋白邊）。webp 給支援的瀏覽器（較小），src 是 PNG 備用；src 留空 = 顯示佔位框
+    photo: { src: '/images/ME/portrait-sticker.png', webp: '/images/ME/portrait-sticker.webp', width: 640, height: 983, alt: '黃思敏的個人照片' },
   },
   // ───── 首頁 ③ 三張角色卡：左 PM、中 UI/UX、右 Design─────
   roles: [
@@ -70,8 +70,10 @@ export const profile = {
       body: '面對快速變動的市場與新工具，我保持好奇與敏捷。勇於嘗試新方法，並透過數據與反饋持續修正，在不確定性中建立秩序，讓自己與產品共同進化。',
     },
   ],
+  // Designer CV：把 PDF 放進 public/cv/，再把路徑填進來（例：/cv/designer-cv.pdf）；留空 = 按鈕顯示為暫不可點
+  cv: '',
   contacts: [
-    { label: '104 履歷', url: '' },
+    { label: '104 履歷', url: 'https://pda.104.com.tw/profile/share/ia8w4cI67carNd7r7fh9XjGNpJuJB6Rb' },
     { label: 'Cake 履歷', url: '' },
     { label: 'LinkedIn', url: '' },
   ],

@@ -1,0 +1,214 @@
+[
+  {
+    "page": 1,
+    "title": "品牌識別系統手冊"
+  },
+  {
+    "page": 2,
+    "title": "八大主題目錄"
+  },
+  {
+    "page": 3,
+    "chapter": "01 / SIGNATURE & TYPOGRAPHY",
+    "title": "直式標誌與設計概念",
+    "source": 3
+  },
+  {
+    "page": 4,
+    "chapter": "01 / SIGNATURE & TYPOGRAPHY",
+    "title": "橫式標誌與比例格線",
+    "source": 3
+  },
+  {
+    "page": 5,
+    "chapter": "01 / SIGNATURE & TYPOGRAPHY",
+    "title": "中文標準字",
+    "source": 4
+  },
+  {
+    "page": 6,
+    "chapter": "01 / SIGNATURE & TYPOGRAPHY",
+    "title": "英文標準字",
+    "source": 4
+  },
+  {
+    "page": 7,
+    "chapter": "02 / MINIMUM SIZE",
+    "title": "標誌印刷最小尺寸",
+    "source": 5
+  },
+  {
+    "page": 8,
+    "chapter": "02 / MINIMUM SIZE",
+    "title": "直式標誌的等比縮放",
+    "source": 5
+  },
+  {
+    "page": 9,
+    "chapter": "02 / MINIMUM SIZE",
+    "title": "橫式標誌的等比縮放",
+    "source": 5
+  },
+  {
+    "page": 10,
+    "chapter": "02 / MINIMUM SIZE",
+    "title": "完整公司名稱組合｜最小尺寸",
+    "source": 6
+  },
+  {
+    "page": 11,
+    "chapter": "02 / MINIMUM SIZE",
+    "title": "完整公司名稱組合｜縮放",
+    "source": 6
+  },
+  {
+    "page": 12,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "企業標準色與印刷規格",
+    "source": 7
+  },
+  {
+    "page": 13,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "標誌的彩色、反白與特殊色",
+    "source": 7
+  },
+  {
+    "page": 14,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "完整組合的標準色規格",
+    "source": 8
+  },
+  {
+    "page": 15,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "完整組合的彩色與反白",
+    "source": 8
+  },
+  {
+    "page": 16,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "標誌｜背景對照 1",
+    "source": 9
+  },
+  {
+    "page": 17,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "標誌｜背景對照 2",
+    "source": 9
+  },
+  {
+    "page": 18,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "完整公司名稱組合｜背景對照 1",
+    "source": 10
+  },
+  {
+    "page": 19,
+    "chapter": "03 / COLOUR SYSTEM",
+    "title": "完整公司名稱組合｜背景對照 2",
+    "source": 10
+  },
+  {
+    "page": 20,
+    "chapter": "04 / CLEAR SPACE",
+    "title": "直式標誌留白",
+    "source": 13
+  },
+  {
+    "page": 21,
+    "chapter": "04 / CLEAR SPACE",
+    "title": "橫式標誌留白",
+    "source": 14
+  },
+  {
+    "page": 22,
+    "chapter": "04 / CLEAR SPACE",
+    "title": "圓形範圍留白",
+    "source": 15
+  },
+  {
+    "page": 23,
+    "chapter": "05 / INCORRECT USAGE",
+    "title": "直式標誌｜比例與組合",
+    "source": 11
+  },
+  {
+    "page": 24,
+    "chapter": "05 / INCORRECT USAGE",
+    "title": "橫式標誌｜對齊與間距",
+    "source": 11
+  },
+  {
+    "page": 25,
+    "chapter": "05 / INCORRECT USAGE",
+    "title": "完整組合｜正常與錯誤位置",
+    "source": 12
+  },
+  {
+    "page": 26,
+    "chapter": "05 / INCORRECT USAGE",
+    "title": "完整組合｜位置與高度限制",
+    "source": 12
+  },
+  {
+    "page": 27,
+    "chapter": "06 / CHARACTER & APPLICATION",
+    "title": "酷客｜品牌吉祥物",
+    "source": 16
+  },
+  {
+    "page": 28,
+    "chapter": "06 / CHARACTER & APPLICATION",
+    "title": "酷客｜造型與角色設定",
+    "source": 16
+  },
+  {
+    "page": 29,
+    "chapter": "06 / CHARACTER & APPLICATION",
+    "title": "酷客｜正面、側面與背面",
+    "source": 16
+  },
+  {
+    "page": 30,
+    "chapter": "06 / CHARACTER & APPLICATION",
+    "title": "吉祥物應用｜LINE 行銷遊戲",
+    "source": 17
+  },
+  {
+    "page": 31,
+    "chapter": "06 / CHARACTER & APPLICATION",
+    "title": "吉祥物應用｜後台登入與首頁",
+    "source": 17
+  },
+  {
+    "page": 32,
+    "chapter": "07 / BRAND PATTERNS",
+    "title": "藍底背景圖樣",
+    "source": 18
+  },
+  {
+    "page": 33,
+    "chapter": "07 / BRAND PATTERNS",
+    "title": "白底背景圖樣",
+    "source": 19
+  },
+  {
+    "page": 34,
+    "chapter": "08 / BRAND COLLATERAL",
+    "title": "公司名片",
+    "source": 20
+  },
+  {
+    "page": 35,
+    "chapter": "08 / BRAND COLLATERAL",
+    "title": "公司識別證",
+    "source": 21
+  },
+  {
+    "page": 36,
+    "chapter": "08 / BRAND COLLATERAL",
+    "title": "T 恤｜正面與背面",
+    "source": 22
+  }
+]

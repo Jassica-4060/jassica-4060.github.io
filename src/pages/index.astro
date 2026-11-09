@@ -56,9 +56,12 @@ const roleIcons = [
           <h2 id="intro-title">{profile.about.heading.split('\n').map((l) => <span class="line">{l}</span>)}</h2>
           {profile.about.body.map((p) => <p>{p}</p>)}
         </div>
-        <figure class="portrait reveal">
+        <figure class:list={['portrait reveal', { 'is-sticker': profile.about.photo.src }]}>
           {profile.about.photo.src
-            ? <img src={profile.about.photo.src} alt={profile.about.photo.alt} loading="lazy" />
+            ? <picture>
+                {profile.about.photo.webp && <source type="image/webp" srcset={profile.about.photo.webp} />}
+                <img src={profile.about.photo.src} alt={profile.about.photo.alt} width={profile.about.photo.width} height={profile.about.photo.height} loading="lazy" />
+              </picture>
             : <span class="photo-ph">個人照片<br />（建議 4:5 直式）</span>}
         </figure>
       </div>
@@ -147,7 +150,9 @@ const roleIcons = [
       <h2 id="contact-title" class="reveal">一起聊聊下一個<br />複雜的產品問題。</h2>
       <p class="reveal">履歷與聯絡管道如下；完整的經歷與自我介紹在「關於我」（需密碼）。</p>
       <div class="reveal"><ContactLinks tone="dark" /></div>
-      <a class="btn btn--accent reveal" href="/about/">前往關於我（需密碼）<span class="arrow" aria-hidden="true">→</span></a>
+      {profile.cv
+        ? <a class="btn btn--accent reveal" href={profile.cv} target="_blank" rel="noopener">查看 Designer CV<span class="sr-only">（PDF，另開新分頁）</span><span class="arrow" aria-hidden="true">↗</span></a>
+        : <span class="btn btn--accent reveal is-disabled" aria-disabled="true">查看 Designer CV（PDF 待補）</span>}
     </div>
   </section>
 </Base>
@@ -262,6 +267,12 @@ const roleIcons = [
   }
   .portrait:hover { rotate: 0deg; }
   .portrait img, .photo-ph { display: grid; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 8px; }
+  /* 去背貼紙照：拿掉相框，人物（含白邊）直接貼在頁面上，陰影跟著輪廓走 */
+  .portrait.is-sticker { padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; width: min(80%, 420px); rotate: -3deg; }
+  .portrait.is-sticker img {
+    display: block; height: auto; aspect-ratio: auto; object-fit: contain; border-radius: 0;
+    filter: drop-shadow(8px 10px 0 color-mix(in srgb, var(--ink) 22%, transparent));
+  }
   .photo-ph {
     place-items: center; text-align: center; font-size: 0.9rem; font-weight: 700; color: var(--ink-soft);
     background: repeating-linear-gradient(-45deg, transparent 0 12px, var(--line) 12px 13px), color-mix(in srgb, var(--ink) 6%, var(--paper));

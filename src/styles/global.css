@@ -36,6 +36,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ───────── 設計師網格底紋：24px 一格的淡細線（只在米白底區塊看得到） ───────── */
+:root { --grid-line: color-mix(in srgb, var(--ink) 7%, transparent); }
+body {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 img, svg { display: block; max-width: 100%; }
 a { color: inherit; }
 p { margin: 0 0 1em; }
@@ -84,6 +93,8 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 900; }
 .btn--accent { background: var(--accent); color: var(--ink); }
 .btn .arrow { transition: transform 0.3s var(--ease); }
 .btn:hover .arrow { transform: translateX(4px); }
+.btn--rect { border-radius: 12px; } /* 圓角矩形版本（例：官網改版的網站連結） */
+.case-links { display: flex; flex-wrap: wrap; gap: 12px; margin: 1.6em 0 0; }
 
 .tag {
   display: inline-block; padding: 4px 12px; border-radius: 999px;
@@ -554,6 +565,7 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 900; }
 .rule-logo img { width: 100%; height: auto; }
 /* 工作流程：一列六張，由左到右 */
 .workflow.is-row { --wf-gap: 28px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (min-width: 1101px) { .workflow.is-row.is-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } } /* 5 步版本（例：官網改版）；平板、手機沿用下方換行規則 */
 .workflow.is-row > * { grid-area: auto; }
 .workflow.is-row > .wf-turn { display: none; }
 .workflow.is-row .wf-card::after { content: '→'; position: absolute; top: 50%; left: auto; right: calc(var(--wf-gap) / -2); transform: translate(50%, -50%); font-size: 1.2rem; font-weight: 900; color: var(--ink); }
@@ -728,18 +740,35 @@ dd > .kv-pending:first-child, p.kv-pending { margin-left: 0; }
 .kv-cover, .kv-art { margin: 1.6em 0 2em; display: grid; gap: 8px; }
 .kv-cover img, .kv-art img { width: 100%; height: auto; border-radius: var(--radius); border: 2px solid var(--line); background: #fff; }
 .kv-art .ph { margin: 0; }
+/* 主視覺設計：左圖右文，手機改上下 */
+.kv-intro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: center; margin: 1.6em 0 2.4em; }
+.kv-intro .kv-art { margin: 0; }
+.kv-intro .kv-art .ph { aspect-ratio: 4 / 3; }
+.kv-intro .kv-text p { margin: 0; }
+.kv-intro .kv-text .kv-sub { margin-bottom: 0.6em; }
+/* .is-illus：左文右插畫（裝飾用，插畫透明底、不加框） */
+.kv-intro.is-illus { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+/* .is-illus-left：插畫在左、文字在右，多段文字保留段距（例：官網改版） */
+.kv-intro.is-illus-left { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+.kv-intro.is-illus-left .kv-text p:not(.kv-sub) + p { margin-top: 1em; }
+.kv-illus { width: 100%; height: auto; }
+@media (max-width: 760px) {
+  .kv-intro { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .kv-intro.is-illus { grid-template-columns: minmax(0, 1fr); }
+  .kv-illus { max-width: 360px; justify-self: center; }
+}
 .kv-cover figcaption, .kv-art figcaption, .kv-set figcaption, .kv-photos figcaption { font-size: 0.88rem; color: var(--ink-soft); }
 .kv-cover figcaption strong { color: var(--ink); }
 /* 設計範圍三組卡：沿用 .scope，清單改成標籤排列 */
 .kv-scope .scope-row ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; }
 .kv-scope .scope-row li { margin: 0; padding: 2px 10px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 7%, var(--paper)); font-size: 0.92rem; font-weight: 700; }
 .kv-scope .scope-mark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-/* 視覺延伸：左大圖＋右兩張細節圖，手機依序單欄 */
-.kv-set { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; margin: 0.6em 0 1em; }
+/* 視覺延伸：上方一張大圖，下方每個製作物各一格（三欄），手機兩欄 */
+.kv-set { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 16px; margin: 0.6em 0 1.6em; }
 .kv-set figure, .kv-photos figure { margin: 0; display: grid; gap: 8px; align-content: start; }
 .kv-set .ph, .kv-photos .ph { margin: 0; aspect-ratio: 4 / 3; border-radius: calc(var(--radius) * 0.7); }
-.kv-set .is-lead { grid-row: span 2; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; }
-.kv-set .is-lead .ph { aspect-ratio: auto; height: 100%; min-height: 240px; }
+.kv-set .is-lead { grid-column: 1 / -1; }
+.kv-set .is-lead .ph { aspect-ratio: 16 / 9; }
 .kv-set img { width: 100%; height: auto; border-radius: calc(var(--radius) * 0.7); border: 2px solid var(--line); background: #fff; }
 /* 活動現場：一張大圖＋補充照片兩欄；照片可裁切，加 .is-full 改為完整顯示 */
 .kv-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; margin: 1.2em 0 1.6em; }
@@ -749,15 +778,38 @@ dd > .kv-pending:first-child, p.kv-pending { margin-left: 0; }
 .kv-photos .is-lead img { aspect-ratio: 16 / 9; }
 .kv-photos .is-full img { aspect-ratio: auto; object-fit: contain; }
 @media (max-width: 760px) {
-  .kv-set, .kv-photos { grid-template-columns: minmax(0, 1fr); }
-  .kv-set .is-lead { grid-row: auto; }
-  .kv-set .is-lead .ph { aspect-ratio: 4 / 3; height: auto; min-height: 0; }
+  .kv-photos { grid-template-columns: minmax(0, 1fr); }
+  .kv-set { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kv-set .is-lead .ph { aspect-ratio: 4 / 3; }
   .kv-photos .is-lead .ph, .kv-photos .is-lead img { aspect-ratio: 4 / 3; }
+}
+/* 視覺延伸 .is-pair：兩張一樣大、左右並排（手機也維持兩欄） */
+.kv-set.is-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kv-set.is-pair img { aspect-ratio: 4 / 3; object-fit: cover; }
+/* 視覺延伸 .is-side：左一張大圖，右三張正方形小圖由上往下；圖片一律裁切填滿 */
+.kv-set.is-side { grid-template-columns: minmax(0, 4fr) minmax(0, 1fr); }
+.kv-set.is-side .is-lead { grid-column: 1; grid-row: span 3; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; contain: size; } /* 高度跟右側三張對齊，不被大圖撐高 */
+.kv-set.is-side .is-lead .ph, .kv-set.is-side .is-lead img { aspect-ratio: auto; height: 100%; }
+.kv-set.is-side figure { min-width: 0; }
+.kv-set.is-side figure:not(.is-lead) .ph, .kv-set.is-side figure:not(.is-lead) img { aspect-ratio: 1 / 1; }
+.kv-set.is-side figure:not(.is-lead) .ph { padding: 10px; overflow: hidden; } /* 窄欄時佔位文字不撐破正方形 */
+.kv-set.is-side img { object-fit: cover; }
+@media (max-width: 760px) {
+  .kv-set.is-side { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kv-set.is-side .is-lead { grid-column: 1 / -1; grid-row: auto; contain: none; }
+  .kv-set.is-side .is-lead .ph, .kv-set.is-side .is-lead img { aspect-ratio: 4 / 3; height: auto; }
 }
 
 /* ───────── 品牌 CIS 識別規範案例（07-brand-cis.md 專用，class 一律 cis- 開頭） ───────── */
 .cis-sub { margin: -0.2em 0 1.2em; font-size: clamp(1.05rem, 1vw + 0.6rem, 1.3rem); font-weight: 700; }
 .cis-text { max-width: 42em; }
+/* 引言＋右側插圖：桌機並排，窄螢幕插圖移到文字下方 */
+.cis-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 369px); gap: 24px clamp(32px, 5vw, 80px); align-items: start; }
+.cis-intro .cis-text { margin: 0; }
+.cis-intro img { width: 100%; max-width: 369px; height: auto; }
+@media (max-width: 900px) {
+  .cis-intro { grid-template-columns: minmax(0, 1fr); }
+}
 .cis-label { font-size: 0.9rem; font-weight: 900; letter-spacing: 0.12em; color: var(--ink-soft); margin: 1.8em 0 0.6em; }
 .cis-note { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
 /* 待補小標籤：跟 .todo 同一套黃底虛線語言，用在欄位值與短句 */
@@ -793,10 +845,30 @@ p.cis-pending { justify-self: start; margin: 0; }
 .cis-rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; margin: 1.4em 0; }
 .cis-rule { display: grid; gap: 10px; align-content: start; }
 .cis-rule.is-wide { grid-column: 1 / -1; }
+.cis-rule.is-clear img { background: transparent; border-color: transparent; } /* 透明底規範圖：不襯白底、不加外框，直接疊在頁面底色上（框線改透明，版面位置不變） */
 .prose .cis-rule h3 { margin: 0; padding-top: 10px; border-top: 2px solid var(--ink); }
+.cis-rule > p:not(.cis-pending) { margin: 0; font-size: 0.99rem; color: var(--ink-soft); }
 .cis-rule figure { margin: 0; }
 .cis-rule .ph { margin: 0; aspect-ratio: 4 / 3; border-radius: calc(var(--radius) * 0.7); }
-.cis-rule img { width: 100%; height: auto; border-radius: calc(var(--radius) * 0.7); border: 2px solid var(--line); background: #fff; }
+.cis-rule img { width: 100%; height: auto; padding: 12px; border-radius: calc(var(--radius) * 0.7); border: 2px solid var(--line); background: #fff; }
+/* 關鍵設計決策：桌機雙卡並排，卡內 編號 → 標題 → 示意圖 → 說明／好處／目標 */
+.cis-decisions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 0 1.4em; }
+.cis-decision { padding: 20px 22px; border: 2px solid var(--ink); border-radius: 14px; display: grid; gap: 12px; align-content: start; }
+.prose .cis-decision-no { margin: 0; justify-self: start; padding: 0 8px; border-radius: 6px; background: var(--accent); font-size: 0.85rem; font-weight: 900; }
+.prose .cis-decision h4 { margin: 0; font-size: 1.2rem; font-weight: 900; line-height: 1.4; }
+.cis-decision figure { margin: 0; }
+.cis-decision .ph { margin: 0; aspect-ratio: 16 / 10; border-radius: calc(var(--radius) * 0.7); }
+.cis-decision img { width: 100%; height: auto; border-radius: calc(var(--radius) * 0.7); border: 2px solid var(--line); background: #fff; }
+.cis-decision dl { margin: 0; display: grid; gap: 10px; }
+.cis-decision dl > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.cis-decision dt { padding: 1px 8px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 7%, var(--paper)); font-size: 0.85rem; font-weight: 900; line-height: 1.7; }
+.cis-decision dd { margin: 0; font-size: 0.95rem; line-height: 1.7; }
+@media (max-width: 760px) { .cis-decisions { grid-template-columns: minmax(0, 1fr); } }
+/* 專案回顧三大痛點：桌機三欄、手機依序；icon 在上，與專案目標卡區隔（淺底、無編號） */
+.prose .cis-pains { list-style: none; padding: 0; margin: 0.4em 0 1.4em; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.cis-pains li { margin: 0; padding: 18px; border: 2px solid var(--ink); border-radius: 14px; background: color-mix(in srgb, var(--ink) 4%, var(--paper)); display: grid; gap: 6px; align-content: start; }
+.cis-pain-icon { width: 44px; height: 44px; margin-bottom: 4px; }
+.cis-pains span { font-size: 0.95rem; }
 /* 延伸作品：制服大圖＋名片、識別證，其餘四件兩兩一列；手機單欄 */
 .cis-works { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px 16px; margin: 1.2em 0 0; }
 .cis-works figure { margin: 0; display: grid; gap: 8px; align-content: start; grid-column: span 3; }
@@ -806,6 +878,8 @@ p.cis-pending { justify-self: start; margin: 0; }
 .cis-works .is-lead .ph { aspect-ratio: auto; height: 100%; min-height: 280px; }
 .cis-works img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: calc(var(--radius) * 0.7); }
 .cis-works .is-lead img { height: 100%; aspect-ratio: auto; }
+/* 方形動畫：整張放進 4:3 框，左右用動畫底色補滿 */
+.cis-works .is-contain img { object-fit: contain; background: #fff4db; }
 .cis-works .is-full img { aspect-ratio: auto; object-fit: contain; border: 2px solid var(--line); background: #fff; }
 .cis-works figcaption { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.7; }
 .cis-works figcaption strong { color: var(--ink); font-size: 1rem; }
@@ -819,3 +893,20 @@ p.cis-pending { justify-self: start; margin: 0; }
   .cis-rules, .cis-works { grid-template-columns: minmax(0, 1fr); }
   .cis-works .is-lead .ph { aspect-ratio: 4 / 3; }
 }
+.cis-info dd ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.cis-info dd li { margin: 0; padding-left: 1em; text-indent: -1em; }
+.cis-info dd li::before { content: '・'; }
+/* 專案目標 icon：與編號同一列靠右 */
+.cis-goals li:has(.cis-goal-icon) { grid-template-columns: 1fr auto; align-items: center; }
+.cis-goals li:has(.cis-goal-icon) > :is(strong, span) { grid-column: 1 / -1; }
+.cis-goal-icon { grid-column: 2; grid-row: 1; width: 40px; height: 40px; }
+/* 角色與工作範圍卡：標題直接顯示文字，下方放素材圖 */
+.cis-scope .scope-row > .cis-card-title { margin: 0; font-size: 1.1rem; font-weight: 900; }
+/* 05 三張做法卡：桌機固定三欄，窄螢幕單欄（避免 2＋1 留空） */
+.cis-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 760px) { .cis-actions { grid-template-columns: minmax(0, 1fr); } }
+.cis-card-icon { width: 44px; height: 44px; }
+/* 螢光筆重點：黃色色塊只壓在文字下半部，換行時每行各自一段 */
+.cis-mark { background: linear-gradient(transparent 55%, color-mix(in srgb, var(--accent) 75%, transparent) 55%); padding: 0 2px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.cis-card-media { margin: 0; aspect-ratio: 4 / 3; padding: 16px; border-radius: calc(var(--radius) * 0.7); font-size: 0.88rem; }
+.cis-role img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: calc(var(--radius) * 0.7); }

@@ -6,7 +6,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "lock-about": "node scripts/lock-about.mjs",
-    "figma": "node figma-plugin/build.mjs"
+    "figma": "node figma-plugin/build.mjs",
+    "trim-logos": "node scripts/trim-logos.mjs",
+    "about-html": "node scripts/export-about-html.mjs"
   },
   "type": "module",
   "dependencies": {

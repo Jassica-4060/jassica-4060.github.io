@@ -7,6 +7,7 @@ import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
+import { pngBox } from '../scripts/png-box.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
@@ -31,21 +32,147 @@ const cases = readdirSync(caseDir).filter((f) => f.endsWith('.md')).map((f) => {
   const data = {};
   for (const line of m[1].split('\n')) {
     const i = line.indexOf(':');
-    if (i > 0) data[line.slice(0, i).trim()] = parseValue(line.slice(i + 1));
+    if (i > 0) data[line.slice(0, i).trim()] = parseValue(line.slice(i + 1).replace(/\s+#[^"']*$/, '')); // 去掉行尾 YAML 註解
   }
   return { id: f.replace(/\.md$/, ''), ...data, body: m[2] };
 }).filter((c) => !c.draft).sort((a, b) => a.order - b.order);
 
 // ── 內文 → 區塊（只處理案例頁實際用到的格式）
 const inline = (html) => html
-  .replace(/<strong>([\s\S]*?)<\/strong>/g, '**$1**')
+  .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/g, '**$1**') // 含 class（如 cis-mark 螢光筆）也保留粗體
   .replace(/<br\s*\/?>/g, '\u0000')
   .replace(/<[^>]+>/g, '')
   .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
   .replace(/\s+/g, ' ').replace(/ ?\u0000 ?/g, '\n').trim();
 const all = (re, s) => [...s.matchAll(re)];
+// ── 品牌 CIS 案例（07-brand-cis.md，class 一律 cis- 開頭）
+const pick = (re, s) => inline((s.match(re) || [])[1] || '');
+const pendings = (s) => all(/<(?:p|span) class="cis-pending">([\s\S]*?)<\/(?:p|span)>/g, s).map((r) => inline(r[1]));
+const noPending = (s) => s.replace(/<(p|span) class="cis-pending">[\s\S]*?<\/\1>/g, '');
+const imgOf = (s) => (s.match(/<img[^>]*src="([^"]+)"/) || [])[1] || '';
+const phOf = (s) => pick(/<div class="ph[^"]*"><span>([\s\S]*?)<\/span>/, s);
+function cisBlock(h) {
+  if (/^<p class="cis-sub"/.test(h)) return { type: 'cissub', text: inline(h) };
+  if (/^<p class="cis-text"/.test(h)) return { type: 'cistext', text: inline(h) };
+  if (/class="cis-intro"/.test(h)) return { type: 'cistext', text: pick(/<p class="cis-text">([\s\S]*?)<\/p>/, h) }; // 旁邊的插圖先不畫進設計稿
+  if (/^<h3 class="cis-label"/.test(h)) return { type: 'cislabel', text: inline(h) };
+  if (/class="cis-info"/.test(h)) return {
+    type: 'cisinfo',
+    items: all(/<div><dt>([\s\S]*?)<\/dt><dd>([\s\S]*?)<\/dd><\/div>/g, h).map((r) => ({
+      label: inline(r[1]),
+      list: all(/<li>([\s\S]*?)<\/li>/g, r[2]).map((x) => inline(x[1])),
+      value: /<li>/.test(r[2]) ? '' : inline(noPending(r[2])),
+      pending: pendings(r[2]),
+    })),
+  };
+  if (/class="cis-(cover|art)"/.test(h)) return { type: 'cisfig', img: imgOf(h), ph: phOf(h), caption: pick(/<figcaption>([\s\S]*?)<\/figcaption>/, h) };
+  if (/class="cis-goals"/.test(h)) return {
+    type: 'cisgoals',
+    items: all(/<li>([\s\S]*?)<\/li>/g, h).map((r) => ({ icon: imgOf(r[1]), title: pick(/<strong>([\s\S]*?)<\/strong>/, r[1]), desc: pick(/<span>([\s\S]*?)<\/span>/, r[1]) })),
+  };
+  if (/class="cis-pains"/.test(h)) return {
+    type: 'cispains',
+    items: all(/<li>([\s\S]*?)<\/li>/g, h).map((r) => ({ icon: imgOf(r[1]), title: pick(/<strong>([\s\S]*?)<\/strong>/, r[1]), desc: pick(/<span>([\s\S]*?)<\/span>/, r[1]) })),
+  };
+  if (/class="scope cis-scope/.test(h)) return {
+    type: 'cisscope', role: /cis-role/.test(h),
+    items: h.split('<div class="scope-row">').slice(1).map((c) => ({
+      title: pick(/<p class="cis-card-title">([\s\S]*?)<\/p>/, c),
+      mark: pick(/<span class="scope-mark">([\s\S]*?)<\/span>/, c),
+      media: phOf(c), img: imgOf(c.replace(/<img class="cis-card-icon"[^>]*>/, '')),
+      icon: (c.match(/<img class="cis-card-icon"[^>]*src="([^"]+)"/) || [])[1] || '',
+      chips: all(/<li>([\s\S]*?)<\/li>/g, c).map((r) => inline(r[1])),
+      texts: all(/<p>([\s\S]*?)<\/p>/g, c).map((r) => inline(r[1])),
+      pending: pendings(c),
+      note: pick(/<p class="cis-note">([\s\S]*?)<\/p>/, c),
+    })),
+  };
+  if (/class="cis-rules"/.test(h)) return {
+    type: 'cisrules',
+    items: h.split('<div class="cis-rule').slice(1).map((c) => ({
+      wide: /^ is-wide/.test(c), title: pick(/<h3>([\s\S]*?)<\/h3>/, c), img: imgOf(c), ph: phOf(c),
+      texts: all(/<p>([\s\S]*?)<\/p>/g, c).map((r) => inline(r[1])), pending: pendings(c),
+    })).filter((x) => x.title),
+  };
+  if (/class="cis-decisions"/.test(h)) return {
+    type: 'cisdecisions',
+    items: h.split('<div class="cis-decision">').slice(1).map((c) => ({
+      no: pick(/<p class="cis-decision-no">([\s\S]*?)<\/p>/, c), title: pick(/<h4>([\s\S]*?)<\/h4>/, c), img: imgOf(c), ph: phOf(c),
+      rows: all(/<dt>([\s\S]*?)<\/dt><dd>([\s\S]*?)<\/dd>/g, c).map((r) => ({ label: inline(r[1]), text: inline(r[2]) })),
+    })),
+  };
+  if (/class="cis-works"/.test(h)) return {
+    type: 'cisworks',
+    items: h.split('<figure').slice(1).map((c) => {
+      const cap = (c.match(/<figcaption>([\s\S]*?)<\/figcaption>/) || [])[1] || '';
+      return {
+        lead: /is-lead/.test(c.split('>')[0]), full: /is-full/.test(c.split('>')[0]),
+        img: imgOf(c), ph: phOf(c),
+        title: pick(/<strong>([\s\S]*?)<\/strong>/, cap), pending: pendings(cap),
+        caption: inline((cap.split(/<br\s*\/?>/)[1]) || ''),
+      };
+    }),
+  };
+  return null;
+}
 function htmlBlock(h) {
+  h = h.replace(/<!--[\s\S]*?-->/g, '').trim(); // 註解（給 Jessica 的換圖提示）不畫進設計稿
+  if (!h) return null;
   if (/class="todo"/.test(h)) return { type: 'todo', text: inline(h) };
+  if (/^<p class="when"/.test(h)) return { type: 'when', text: inline(h) }; // 關於我：任職期間・地點
+  if (/class="skills"/.test(h)) return { // 關於我：技能（軟硬實力），圓形 icon＋標題＋一句說明
+    type: 'skills',
+    items: all(/<li>([\s\S]*?)<\/li>/g, h).map((r) => ({
+      svg: (r[1].match(/<svg[\s\S]*?<\/svg>/) || [])[0] || '',
+      title: pick(/<strong>([\s\S]*?)<\/strong>/, r[1]),
+      desc: pick(/<\/strong><span>([\s\S]*?)<\/span>/, r[1]),
+    })),
+  };
+  if (/class="cap"/.test(h)) return { // 關於我：核心能力三欄卡片（icon 是內嵌 SVG）＋案例 CTA 連結
+    type: 'capabilities',
+    items: h.split('<section class="cap-card">').slice(1).map((c) => ({
+      svg: (c.match(/<svg[\s\S]*?<\/svg>/) || [])[0] || '',
+      title: pick(/<h3>([\s\S]*?)<\/h3>/, c),
+      desc: pick(/<\/h3>\s*<p>([\s\S]*?)<\/p>/, c),
+      links: all(/<a class="cap-link" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g, c).map((r) => ({ href: r[1], title: inline(r[2]) })),
+    })),
+  };
+  if (/class="xp"/.test(h)) return { // 關於我：工作經歷（橫向時間軸＋卡片），items[0] = 現職
+    type: 'timeline',
+    items: h.split('<section class="xp-panel"').slice(1).map((c) => {
+      const when = all(/<span>([\s\S]*?)<\/span>/g, (c.match(/<p class="xp-when">([\s\S]*?)<\/p>/) || [])[1] || '').map((r) => inline(r[1])); // 期間・年資・地點
+      return {
+        date: when[0] || '', dur: when.length > 2 ? when[1] : '', meta: when.length > 1 ? when[when.length - 1] : '',
+        title: pick(/<h3>([\s\S]*?)<\/h3>/, c),
+        items: all(/<li>([\s\S]*?)<\/li>/g, c).map((r) => `**${pick(/<strong>([\s\S]*?)<\/strong>/, r[1])}** ${pick(/<\/strong><span>([\s\S]*?)<\/span>/, r[1])}`),
+        icons: all(/<li>([\s\S]*?)<\/li>/g, c).map((r) => (r[1].match(/<span class="xp-ico">(<svg[\s\S]*?<\/svg>)/) || [])[1] || ''), // 有 icon 的卡片不顯示編號
+        // 外部連結（例：瀏覽已上線網站）；沒有連結的卡片是 null
+        links: all(/<li>([\s\S]*?)<\/li>/g, c).map((r) => {
+          const m = r[1].match(/<a class="xp-link" href="([^"]+)"[^>]*>([^<]+)/);
+          return m ? { href: m[1], text: m[2].trim() } : null;
+        }),
+        // 亮點：星星 icon（SVG 原文）＋重點文字；沒有亮點的卡片是 null
+        hls: all(/<li>([\s\S]*?)<\/li>/g, c).map((r) => {
+          const m = r[1].match(/<p class="xp-hl">(<svg[\s\S]*?<\/svg>)<span>([\s\S]*?)<\/span><\/p>/);
+          return m ? { star: m[1], text: inline(m[2]) } : null;
+        }),
+      };
+    }),
+  };
+  if (/class="about-intro"/.test(h)) return { // 關於我：介紹＋插畫預留＋三張流程卡（icon 是內嵌 SVG）
+    type: 'aboutintro',
+    sub: pick(/<p class="about-sub">([\s\S]*?)<\/p>/, h),
+    tags: all(/<span class="about-tag">([\s\S]*?)<\/span>/g, h).map((r) => inline(r[1])),
+    art: pick(/<figure class="about-art"[^>]*>([\s\S]*?)<\/figure>/, h),
+    img: (h.match(/<figure class="about-art"[^>]*>\s*<img[^>]*src="([^"]+)"/) || [])[1] || '',
+    cards: all(/<li>([\s\S]*?)<\/li>/g, h).map((r) => ({
+      svg: (r[1].match(/<svg[\s\S]*?<\/svg>/) || [])[0] || '',
+      title: pick(/<strong>([\s\S]*?)<\/strong>/, r[1]),
+      desc: pick(/<span>([\s\S]*?)<\/span>/, r[1]),
+    })),
+  };
+  const cis = cisBlock(h);
+  if (cis) return cis;
   if (/class="scope"/.test(h)) return {
     type: 'scope',
     rows: all(/<div class="scope-row is-(in|out)">\s*<span class="scope-mark">([\s\S]*?)<\/span>\s*<div><strong>([\s\S]*?)<\/strong><p>([\s\S]*?)<\/p><\/div>/g, h)
@@ -268,13 +395,15 @@ for (const c of cases) {
 }
 rmSync(tmp, { recursive: true, force: true });
 
-// ── 案例內文用到的畫面圖（PNG/JPG，最長邊縮到 1600）與單色 icon（SVG 原文）
+// ── 案例內文用到的畫面圖（PNG/JPG/GIF，最長邊縮到 1400）與單色 icon（SVG 原文）
 const images = {}, icons = {}, svgs = {};
+// SVG 裡的 C2PA／metadata 很大又用不到，去掉後 Figma 匯入比較穩
+const cleanSvg = (x) => x.replace(/<metadata>[\s\S]*?<\/metadata>/g, '').replace(/\s+xmlns:c2pa="[^"]*"/g, '');
 const tmp2 = mkdtempSync(join(tmpdir(), 'pf-images-'));
 const walkBlocks = (bs) => bs.forEach((b) => {
   [b, ...(b.items || []), ...(b.side ? [b.side] : [])].forEach((it) => {
-    if (it.img && /\.svg$/i.test(it.img) && !svgs[it.img] && existsSync(join(root, 'public', it.img))) svgs[it.img] = readFileSync(join(root, 'public', it.img), 'utf8');
-    if (it.img && /\.(png|jpe?g)$/i.test(it.img) && !images[it.img]) {
+    if (it.img && /\.svg$/i.test(it.img) && !svgs[it.img] && existsSync(join(root, 'public', it.img))) svgs[it.img] = cleanSvg(readFileSync(join(root, 'public', it.img), 'utf8'));
+    if (it.img && /\.(png|jpe?g|gif)$/i.test(it.img) && !images[it.img]) { // GIF 取第一格當靜態圖
       const src = join(root, 'public', it.img);
       if (!existsSync(src)) return;
       const out = join(tmp2, it.img.split('/').pop().replace(/\.\w+$/, '.jpg'));
@@ -282,7 +411,15 @@ const walkBlocks = (bs) => bs.forEach((b) => {
       const dim = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', out]).toString().match(/\d+(?=\s*$)/gm).map(Number);
       images[it.img] = { b64: readFileSync(out).toString('base64'), w: dim[0], h: dim[1] };
     }
-    if (it.icon && !icons[it.icon] && existsSync(join(root, 'public', it.icon))) icons[it.icon] = readFileSync(join(root, 'public', it.icon), 'utf8');
+    if (it.img && /\.webp$/i.test(it.img) && !images[it.img]) { // webp 轉 PNG（不轉 JPEG，保留透明背景）
+      const src = join(root, 'public', it.img);
+      if (!existsSync(src)) return;
+      const out = join(tmp2, it.img.split('/').pop().replace(/\.\w+$/, '.png'));
+      execFileSync('sips', ['-Z', '1400', '-s', 'format', 'png', src, '--out', out], { stdio: 'ignore' });
+      const dim = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', out]).toString().match(/\d+(?=\s*$)/gm).map(Number);
+      images[it.img] = { b64: readFileSync(out).toString('base64'), w: dim[0], h: dim[1] };
+    }
+    if (it.icon && !icons[it.icon] && existsSync(join(root, 'public', it.icon))) icons[it.icon] = cleanSvg(readFileSync(join(root, 'public', it.icon), 'utf8'));
   });
   (b.cards || []).forEach((c) => { if (c.icon && !icons[c.icon] && existsSync(join(root, 'public', c.icon))) icons[c.icon] = readFileSync(join(root, 'public', c.icon), 'utf8'); });
 });
@@ -290,7 +427,7 @@ walkBlocks(caseBlocks);
 const walkDeep = (bs) => { walkBlocks(bs); bs.forEach((b) => { if (b.side && b.side.items) walkBlocks([b.side]); }); };
 // 第二個案例頁：漸進式訊息（外掛指令 ④）
 // 額外案例頁（外掛指令 ④、⑤…）：各自一張稿，互不覆蓋
-const EXTRA_IDS = ['02-line-oa-progressive', '03-workshub-design-system'];
+const EXTRA_IDS = ['02-line-oa-progressive', '03-workshub-design-system', '07-brand-cis'];
 const extras = {};
 for (const id of EXTRA_IDS) {
   const c = cases.find((x) => x.id === id);
@@ -298,7 +435,28 @@ for (const id of EXTRA_IDS) {
   extras[id] = { id, blocks: blocks(c.body) };
   walkBlocks(extras[id].blocks);
 }
+
+// ── 關於我解鎖後的內容（外掛指令 ⑦）：原文在 private/about.md，只在本機打包
+// 因為含私密內容，code.js 已列入 .gitignore，不會上傳 GitHub
+const aboutPath = join(root, 'private/about.md');
+const aboutOpen = existsSync(aboutPath) ? { blocks: blocks(readFileSync(aboutPath, 'utf8')) } : null;
+if (aboutOpen) walkBlocks(aboutOpen.blocks); // 右側插畫等圖片
 rmSync(tmp2, { recursive: true, force: true });
+
+// ── 工作經歷的公司 logo（外掛指令 ⑧）：公司名稱裡出現 match 就用那個檔
+// 原檔四周常有透明留白：算出不透明範圍（box），Figma 用裁切只顯示那一塊，原檔不動
+const TL_LOGOS = [
+  { match: '大學光學', file: 'eye.png' },
+  { match: 'CoolBe', file: 'CoolBe.png' },
+  { match: '91APP', file: '91app.png' },
+  { match: '永豐', file: 'bank.png' },
+];
+const tlLogos = TL_LOGOS.map(({ match, file }) => {
+  const p = join(root, 'public/images/logo', file);
+  if (!existsSync(p)) { console.warn(`⚠️ 找不到 logo：public/images/logo/${file}（${match} 先用文字佔位）`); return null; }
+  const buf = readFileSync(p);
+  return { match, file, b64: buf.toString('base64'), box: pngBox(buf) };
+}).filter(Boolean);
 
 // ── LOGO 與角色卡 icon
 const logo = read('src/assets/logo.svg')
@@ -314,6 +472,8 @@ const data = {
   cases: cases.map(({ body, ...c }) => c),
   caseMain: { id: caseMain.id, blocks: caseBlocks },
   extras,
+  aboutOpen,
+  tlLogos,
   covers: coverPng,
   images,
   icons,
@@ -324,4 +484,4 @@ const data = {
 
 const template = readFileSync(join(here, 'src/render.js'), 'utf8');
 writeFileSync(join(here, 'code.js'), template.replace('/*__DATA__*/null', () => JSON.stringify(data)));
-console.log(`✅ figma-plugin/code.js 已更新：${cases.length} 個作品、案例頁 ${[caseBlocks, ...Object.values(extras).map((e) => e.blocks)].map((b) => b.length).join('＋')} 個區塊、${Object.keys(coverPng).length} 張封面、${Object.keys(images).length} 張畫面圖、${Object.keys(icons).length} 個 icon、${Object.keys(svgs).length} 張向量圖`);
+console.log(`✅ figma-plugin/code.js 已更新：${cases.length} 個作品、案例頁 ${[caseBlocks, ...Object.values(extras).map((e) => e.blocks)].map((b) => b.length).join('＋')} 個區塊、${Object.keys(coverPng).length} 張封面、${Object.keys(images).length} 張畫面圖、${Object.keys(icons).length} 個 icon、${Object.keys(svgs).length} 張向量圖、關於我 ${aboutOpen ? `${aboutOpen.blocks.length} 個區塊` : '（找不到 private/about.md，略過）'}、公司 logo ${tlLogos.length} 個`);

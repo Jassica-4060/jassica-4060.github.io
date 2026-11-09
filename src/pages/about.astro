@@ -65,11 +65,41 @@ import lock from '../data/about.lock.json';
     return new TextDecoder().decode(plain);
   }
 
+  // 工作經歷橫向時間軸：點擊或左右鍵切換下方詳細卡片（Tabs 模式）
+  function initXp(root: HTMLElement) {
+    root.querySelectorAll<HTMLElement>('.xp').forEach((xp) => {
+      const axis = xp.querySelector<HTMLElement>('.xp-axis')!;
+      const tabs = [...xp.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      const select = (tab: HTMLButtonElement, focus = false) => {
+        tabs.forEach((t) => {
+          const on = t === tab;
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+          document.getElementById(t.getAttribute('aria-controls')!)!.hidden = !on;
+        });
+        if (focus) tab.focus({ preventScroll: true });
+        // 手機版 logo 列放不下時，把選中的那家捲到中間（只捲 logo 列，不動整頁）
+        axis.scrollTo({ left: tab.offsetLeft - (axis.clientWidth - tab.offsetWidth) / 2, behavior: focus ? 'smooth' : 'auto' });
+      };
+      tabs.forEach((t, i) => {
+        t.addEventListener('click', () => select(t));
+        t.addEventListener('keydown', (e) => {
+          const to = ({ ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 } as Record<string, number>)[e.key];
+          if (to == null) return;
+          e.preventDefault();
+          select(tabs[(to + tabs.length) % tabs.length], true);
+        });
+      });
+      select(tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[tabs.length - 1]);
+    });
+  }
+
   async function unlock(password: string, focus: boolean) {
     const html = await decrypt(password); // 密碼錯誤時會丟出錯誤
     body.innerHTML = html;
     form.hidden = true;
     content.hidden = false;
+    initXp(body); // 內容顯示後再初始化，手機版才量得到 logo 列寬度
     try { sessionStorage.setItem(KEY, password); } catch {}
     if (focus) document.getElementById('content-title')!.focus();
   }
@@ -128,7 +158,162 @@ import lock from '../data/about.lock.json';
   input[aria-invalid='true'] { border-width: 3px; }
   .msg { min-height: 1.6em; margin: 12px 0 0; font-weight: 700; color: var(--ink) !important; }
   .gate[aria-busy='true'] button { opacity: 0.6; pointer-events: none; }
-  .unlocked { padding-block: clamp(24px, 6vw, 64px); }
+  .unlocked { padding-block: clamp(24px, 6vw, 64px) 0; }
+  /* 區塊分段（scripts/about-sections.mjs 依大標題包成 .ab-sec）：上下留白，第 2、4 段深藍底撐滿整個視窗寬 */
+  .unlocked :global(.ab-sec) { padding-block: clamp(48px, 7vw, 96px); }
+  .unlocked :global(.ab-sec > h2:first-child) { margin-top: 0; }
+  .unlocked :global(.ab-sec--dark) {
+    --on-dark-soft: color-mix(in srgb, var(--paper) 78%, var(--ink));
+    color: var(--paper); background: var(--ink);
+    box-shadow: 0 0 0 100vmax var(--ink); clip-path: inset(0 -100vmax); /* 滿版底色，不會產生橫向捲軸 */
+  }
+  /* 深底上的工作經歷時間軸：線與節點改淺色；logo 加米白底塊（深色字的 logo 才看得見），選中改黃框 */
+  .unlocked :global(.ab-sec--dark .xp-track::before), .unlocked :global(.ab-sec--dark .xp-track::after) { background: var(--paper); }
+  .unlocked :global(.ab-sec--dark .xp-node) { background: var(--ink); border-color: var(--paper); }
+  .unlocked :global(.ab-sec--dark .xp-stop[aria-selected='true'] .xp-node) { background: var(--accent); border-color: var(--accent); }
+  .unlocked :global(.ab-sec--dark .xp-start), .unlocked :global(.ab-sec--dark .xp-role) { color: var(--on-dark-soft); }
+  .unlocked :global(.ab-sec--dark .xp-stop[aria-selected='true'] .xp-start), .unlocked :global(.ab-sec--dark .xp-stop[aria-selected='true'] .xp-role) { color: var(--paper); }
+  .unlocked :global(.ab-sec--dark .xp-logo) { background: var(--paper); border-color: var(--paper); }
+  .unlocked :global(.ab-sec--dark .xp-stop[aria-selected='true'] .xp-logo) { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .unlocked :global(.ab-sec--dark .xp-panel) { color: var(--ink); }
+  /* 深底上的技能：說明文字改淺色、圓形 icon 外框改淺 */
+  .unlocked :global(.ab-sec--dark .skill-text span) { color: var(--on-dark-soft); }
+  .unlocked :global(.ab-sec--dark .skill-badge) { border-color: color-mix(in srgb, var(--paper) 30%, transparent); }
+  /* 01：左介紹＋右插畫預留，下方三張流程卡（內容解鎖後才注入，所以用 :global） */
+  .unlocked :global(.about-top) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+  .unlocked :global(.about-sub) { margin: 0 0 14px; }
+  .unlocked :global(.about-tags) { display: flex; flex-wrap: wrap; gap: 8px; }
+  .unlocked :global(.about-tag) { display: inline-block; font-size: 0.82rem; font-weight: 700; border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 12px; }
+  /* 右側插畫（透明背景，直接疊在米白底上） */
+  .unlocked :global(.about-art) { margin: 0; }
+  .unlocked :global(.about-art img) { width: 100%; height: auto; }
+  .unlocked :global(.about-cards) { list-style: none; padding: 0; margin: 56px 0 1em; display: flex; justify-content: center; gap: 80px; }
+  /* 說明文字在逗號後換行，最長一行約 300px，卡片要 320 才不會再自動斷行 */
+  .unlocked :global(.about-cards li) { position: relative; flex: 0 1 320px; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  /* 流程箭頭：卡與卡之間，對齊 icon 中線 */
+  .unlocked :global(.about-cards li:not(:last-child)::after) {
+    content: ''; position: absolute; left: calc(100% + 12px); top: 37px; width: 56px; height: 14px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='14' viewBox='0 0 56 14' fill='none' stroke='%23152c4c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7H50' stroke-dasharray='4 6'/%3E%3Cpath d='M45 2L51 7L45 12'/%3E%3C/svg%3E") no-repeat center;
+  }
+  .unlocked :global(.about-icon) { width: 88px; height: 88px; box-sizing: border-box; padding: 6px; margin-bottom: 10px; border: 2px solid var(--ink); border-radius: 20px; background: color-mix(in srgb, var(--accent) 22%, var(--paper)); }
+  .unlocked :global(.about-cards strong) { font-size: 1.2rem; font-weight: 900; }
+  .unlocked :global(.about-cards span) { color: var(--ink-soft); font-size: 0.95rem; }
+  /* 02：工作經歷橫向時間軸（左舊右新）＋下方詳細卡片；點擊切換，預設選中現職 */
+  .unlocked :global(.xp) { --xp-panel: color-mix(in srgb, var(--accent) 22%, var(--paper)); margin-top: 8px; }
+  .unlocked :global(.xp-axis) { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .unlocked :global(.xp-stop) {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 4px 22px;
+    background: none; border: 0; font: inherit; color: inherit; text-align: center; cursor: pointer;
+  }
+  .unlocked :global(.xp-start) { font-size: 0.82rem; font-weight: 700; color: var(--ink-soft); }
+  /* 軌道：左右兩半各一段線，第一站左半、最後一站右半淡出 */
+  .unlocked :global(.xp-track) { position: relative; align-self: stretch; height: 24px; margin-inline: -4px; }
+  .unlocked :global(.xp-track::before), .unlocked :global(.xp-track::after) { content: ''; position: absolute; top: 11px; height: 2px; background: var(--ink); }
+  .unlocked :global(.xp-track::before) { left: 0; right: 50%; }
+  .unlocked :global(.xp-track::after) { left: 50%; right: 0; }
+  .unlocked :global(.xp-stop:first-child .xp-track::before) { content: none; }
+  .unlocked :global(.xp-stop:last-child .xp-track::after) { opacity: 0.25; }
+  .unlocked :global(.xp-node) {
+    position: absolute; z-index: 1; left: 50%; top: 50%; width: 14px; height: 14px; box-sizing: border-box; transform: translate(-50%, -50%);
+    border: 2px solid var(--ink); border-radius: 50%; background: var(--paper); transition: width 0.2s, height 0.2s, background 0.2s;
+  }
+  .unlocked :global(.xp-logo) {
+    width: 100%; max-width: 160px; height: 64px; box-sizing: border-box; padding: 12px; display: grid; place-items: center;
+    border: 2px solid transparent; border-radius: 12px; transition: transform 0.2s, border-color 0.2s;
+  }
+  /* 欄寬不足 160 時 logo 框跟著縮，圖片等比縮小不超出框 */
+  .unlocked :global(.xp-logo img) { width: auto; height: auto; max-width: 100%; max-height: 40px; }
+  .unlocked :global(.xp-role) { font-size: 0.9rem; font-weight: 700; line-height: 1.5; color: var(--ink-soft); }
+  /* 選中：節點放大變黃、logo 才有外框（不加黃底）、小三角指向下方詳細區 */
+  .unlocked :global(.xp-stop[aria-selected='true']) { cursor: default; }
+  .unlocked :global(.xp-stop[aria-selected='true'] .xp-start) { color: var(--ink); }
+  .unlocked :global(.xp-stop[aria-selected='true'] .xp-node) { width: 24px; height: 24px; background: var(--accent); }
+  .unlocked :global(.xp-stop[aria-selected='true'] .xp-logo) { border-color: var(--ink); }
+  .unlocked :global(.xp-stop[aria-selected='true'] .xp-role) { font-weight: 900; color: var(--ink); }
+  .unlocked :global(.xp-stop[aria-selected='true']::after) {
+    content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    border: 11px solid transparent; border-top: 0; border-bottom-color: var(--xp-panel);
+  }
+  @media (hover: hover) { .unlocked :global(.xp-stop[aria-selected='false']:hover .xp-logo) { transform: translateY(-3px); } }
+  .unlocked :global(.xp-stop:focus-visible) { outline: none; }
+  .unlocked :global(.xp-stop:focus-visible .xp-logo) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .unlocked :global(.xp-panel) { padding: 32px; border-radius: 24px; background: var(--xp-panel); }
+  .unlocked :global(.xp-panel h3) { margin: 0; font-size: 1.4rem; line-height: 1.4; }
+  .unlocked :global(.xp-when) { margin: 4px 0 20px; font-size: 0.9rem; color: var(--ink-soft); }
+  .unlocked :global(.xp-when span + span::before) { content: '・'; }
+  .unlocked :global(.xp-cards) { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .unlocked :global(.xp-cards li) { margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; background: var(--paper); border: 2px solid var(--ink); border-radius: 16px; }
+  .unlocked :global(.xp-cards li:last-child:nth-child(odd)) { grid-column: 1 / -1; }
+  .unlocked :global(.xp-no) { font-family: var(--font-display); font-size: 0.82rem; padding: 0 8px; border-radius: 6px; background: var(--accent); }
+  /* 編號改成 icon 的卡片：同樣黃底，方形小徽章 */
+  .unlocked :global(.xp-ico) { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--accent); }
+  .unlocked :global(.xp-ico-svg) { width: 20px; height: 20px; }
+  .unlocked :global(.xp-cards strong) { font-size: 1.1rem; font-weight: 900; line-height: 1.4; }
+  .unlocked :global(.xp-cards strong + span) { font-size: 0.95rem; color: var(--ink-soft); }
+  /* 亮點：星星 icon＋重點文字，淡黃底小框貼齊卡片底部（同一列的亮點才會對齊） */
+  .unlocked :global(.xp-hl) {
+    display: flex; align-items: flex-start; gap: 6px; margin: auto 0 0; padding: 6px 10px; border-radius: 8px;
+    font-size: 0.9rem; font-weight: 700; line-height: 1.5; background: color-mix(in srgb, var(--accent) 22%, var(--paper));
+  }
+  .unlocked :global(.xp-hl-star) { flex: none; width: 16px; height: 16px; margin-top: 3px; }
+  /* 外部連結（例：已上線網站），沿用 03 案例連結的黃色底線 */
+  .unlocked :global(.xp-link) {
+    align-self: flex-start; font-size: 0.9rem; font-weight: 700; text-decoration: underline; text-decoration-color: var(--accent);
+    text-decoration-thickness: 3px; text-underline-offset: 5px; transition: text-decoration-color 0.2s;
+  }
+  .unlocked :global(.xp-link:hover), .unlocked :global(.xp-link:focus-visible) { text-decoration-color: var(--ink); }
+  /* 03：核心能力三欄卡片；每張＝icon＋能力標題＋兩行說明＋案例 CTA 連結 */
+  .unlocked :global(.cap) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 8px; }
+  .unlocked :global(.cap-card) { display: flex; flex-direction: column; gap: 8px; padding: 24px; border: 2px solid var(--ink); border-radius: 20px; }
+  .unlocked :global(.cap-icon) {
+    width: 64px; height: 64px; box-sizing: border-box; padding: 4px; margin-bottom: 8px;
+    border: 2px solid var(--ink); border-radius: 16px; background: color-mix(in srgb, var(--accent) 22%, var(--paper));
+  }
+  .unlocked :global(.cap-card h3) { margin: 0; font-size: 1.25rem; line-height: 1.4; }
+  .unlocked :global(.cap-card > p) { margin: 0; font-size: 0.95rem; color: var(--ink-soft); }
+  /* 案例連結推到卡片底部，三欄才會對齊 */
+  .unlocked :global(.cap-links) { list-style: none; padding: 16px 0 0; margin: auto 0 0; display: grid; gap: 8px; }
+  .unlocked :global(.cap-links li) { margin: 0; }
+  .unlocked :global(.cap-link) {
+    font-size: 0.95rem; font-weight: 700; text-decoration: underline; text-decoration-color: var(--accent);
+    text-decoration-thickness: 3px; text-underline-offset: 5px; transition: text-decoration-color 0.2s;
+  }
+  .unlocked :global(.cap-link::after) { content: '→'; display: inline-block; margin-left: 6px; transition: transform 0.2s; }
+  .unlocked :global(.cap-link:hover), .unlocked :global(.cap-link:focus-visible) { text-decoration-color: var(--ink); }
+  .unlocked :global(.cap-link:hover::after), .unlocked :global(.cap-link:focus-visible::after) { transform: translateX(4px); }
+  /* 04：技能（軟硬實力）三欄兩列：圓形 icon＋標題＋一句說明 */
+  .unlocked :global(.skills) {
+    list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 40px;
+  }
+  .unlocked :global(.skills li) { margin: 0; display: flex; align-items: center; gap: 18px; }
+  .unlocked :global(.skill-badge) {
+    flex: none; width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 22%, var(--paper)); border: 1.5px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  .unlocked :global(.skill-icon) { width: 26px; height: 26px; }
+  .unlocked :global(.skill-text) { display: grid; gap: 2px; }
+  .unlocked :global(.skill-text strong) { font-size: 1.15rem; font-weight: 900; line-height: 1.4; }
+  .unlocked :global(.skill-text span) { font-size: 0.95rem; color: var(--ink-soft); }
+  @media (min-width: 761px) and (max-width: 1024px) { .unlocked :global(.skills) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) {
+    .unlocked :global(.about-top) { grid-template-columns: 1fr; gap: 24px; }
+    .unlocked :global(.about-cards) { flex-direction: column; align-items: center; gap: 64px; }
+    .unlocked :global(.about-cards li) { flex-basis: auto; max-width: 320px; }
+    .unlocked :global(.about-cards li:not(:last-child)::after) { left: 50%; top: calc(100% + 25px); transform: translateX(-50%) rotate(90deg); }
+    /* 手機：logo 列可左右滑動，卡片改單欄 */
+    /* 捲動軸藏起來，不然會卡在小三角與詳細區中間；邊緣被切到的 logo 就是「可以滑」的提示 */
+    .unlocked :global(.xp-axis) { grid-auto-columns: 132px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+    .unlocked :global(.xp-axis::-webkit-scrollbar) { display: none; }
+    .unlocked :global(.xp-stop) { scroll-snap-align: center; }
+    .unlocked :global(.xp-logo) { max-width: 112px; height: 56px; }
+    .unlocked :global(.xp-logo img) { max-height: 32px; }
+    .unlocked :global(.xp-panel) { padding: 20px; }
+    .unlocked :global(.xp-panel h3) { font-size: 1.1rem; }
+    .unlocked :global(.xp-cards) { grid-template-columns: 1fr; }
+    .unlocked :global(.cap) { grid-template-columns: 1fr; }
+    .unlocked :global(.skills) { grid-template-columns: 1fr; gap: 20px; }
+    .unlocked :global(.skill-badge) { width: 56px; height: 56px; }
+  }
   .contact-block { border-top: 2px solid var(--ink); padding-block: 40px clamp(64px, 10vw, 120px); }
   .contact-block h2 { font-size: 1.6rem; margin-bottom: 20px; }
 </style>

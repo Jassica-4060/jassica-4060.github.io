@@ -84,4 +84,37 @@ const snapshot = (skip) => page.children.filter((c) => c.getPluginData('pf') && 
     console.log(`⑤ #${n}:`, closed, '| id', f && f.id, '| 圖層', nm.length, '| 其他稿沒變:', snapshot(f) === before2, '| 在漸進式右邊:', f.x === p2.x + p2.width + 200);
     console.log('   ', ['Logos｜LOGO 提案', 'Swatches｜品牌色', 'Layers｜背景色階', 'Compare｜對照', 'Logo｜4（選定）', 'Image｜before-original.jpg', 'Image｜佔位'].map((x) => x + '=' + nm.includes(x)).join('  '));
   }
+  const before3 = snapshot();
+  for (const n of [1, 2]) {
+    figma.command = 'case-cis'; closed = null; eval(code); await tick();
+    const f = page.children.find((c) => c.getPluginData('pf') === 'case-cis');
+    const ds = page.children.find((c) => c.getPluginData('pf') === 'case-ds');
+    const nm = names(f);
+    const nonAL = []; const w = (x) => { if (x.type === 'FRAME' && x._lm === 'NONE' && !/^(Icon｜|Vector｜)/.test(x.name) && !(x.parent && /^(Icon｜|Vector｜)/.test(x.parent.name))) nonAL.push(x.name); (x.children || []).forEach(w); }; w(f);
+    console.log(`⑥ #${n}:`, closed, '| id', f && f.id, '| 圖層', nm.length, '| 其他稿沒變:', snapshot(f) === before3, '| 在 WorksHub+ 右邊:', f.x === ds.x + ds.width + 200, '| 非 Auto Layout 容器:', nonAL.length ? nonAL : '無');
+    console.log('   ', ['Info｜基本資訊', 'Goals｜專案目標', 'Scope｜工作範圍', 'Scope｜使用情境', 'Rules｜識別規範', 'Decisions｜關鍵設計決策', 'Pains｜三大痛點', 'Works｜延伸作品', 'Row｜主圖', 'Icon｜icon-shared-reference.svg', 'Icon｜icon-cloud-library.svg', 'Image｜brand-cis.svg', 'Todo｜待補'].map((x) => x + '=' + nm.includes(x)).join('  '), '| 待補標籤', nm.filter((x) => x === 'Pending｜待補').length, '| 佔位框', nm.filter((x) => /｜佔位$/.test(x)).length);
+  }
+  const before4 = snapshot();
+  for (const n of [1, 2]) {
+    figma.command = 'about-open'; closed = null; eval(code); await tick();
+    const f = page.children.find((c) => c.getPluginData('pf') === 'about-open');
+    const ab = page.children.find((c) => c.getPluginData('pf') === 'about');
+    const nm = names(f);
+    const nonAL = []; const w = (x) => { if (x.type === 'FRAME' && x._lm === 'NONE' && !/^(Icon｜|LOGO)/.test(x.name) && !(x.parent && /^(Icon｜|LOGO)/.test(x.parent.name))) nonAL.push(x.name); (x.children || []).forEach(w); }; w(f);
+    console.log(`⑦ #${n}:`, closed, '| id', f && f.id, '| 圖層', nm.length, '| 其他稿沒變:', snapshot(f) === before4, '| 在關於我（鎖定）右邊:', f.x === ab.x + ab.width + 200, '| 非 Auto Layout 容器:', nonAL.length ? nonAL : '無');
+    console.log('    H2', nm.filter((x) => x === 'H2').length, '| H3', nm.filter((x) => x === 'H3').length, '| 清單', nm.filter((x) => x === 'List｜ul').length, '| 亮點', nm.filter((x) => x === 'Highlight｜亮點').length, '| 能力卡', nm.filter((x) => /^Capability｜/.test(x)).length, '| 技能', nm.filter((x) => /^Skill｜/.test(x)).length, '| 技能 icon', nm.filter((x) => /^Icon｜(複雜流程規劃|設計系統|原型與驗證|研究與數據|跨部門協作|視覺與品牌)/.test(x)).length, '| 能力 icon', nm.filter((x) => /^Icon｜讓/.test(x)).length, '| 案例連結', nm.filter((x) => /^Link｜/.test(x)).length, '| 深藍段', nm.filter((x) => /^Section｜.*（深藍底）$/.test(x)).join(' '), '| 時間軸站點', nm.filter((x) => /^Stop｜/.test(x)).length, '| 詳細區', nm.filter((x) => /^Panel｜/.test(x)).length, '| 待補', nm.includes('Todo｜待補'), '| 聯絡區', nm.includes('ContactBlock'), '| 流程卡', nm.filter((x) => /^Card｜/.test(x)).join(' '), '| 箭頭', nm.filter((x) => x === 'Arrow｜流程').length, '| icon', nm.filter((x) => /^Icon｜(拆解|建立|推動)/.test(x)).length, '| 標籤', nm.filter((x) => /^Tag｜(視覺傳達|網頁設計|UI\/UX|系統架構|產品設計)$/.test(x)).join(' '), '| 插畫', nm.filter((x) => /^Illustration｜/.test(x)).join(' '), '| 時間軸', nm.filter((x) => /^Job｜/.test(x)).length, '| 節點', nm.filter((x) => x === 'Deco｜節點').length);
+  }
+  const before5 = snapshot();
+  for (const n of [1, 2]) {
+    figma.command = 'about-tl-proposal'; closed = null; eval(code); await tick();
+    const fs = ['tl-h', 'tl-h-m'].map((pf) => page.children.find((c) => c.getPluginData('pf') === pf));
+    const ao = page.children.find((c) => c.getPluginData('pf') === 'about-open');
+    const others = page.children.filter((c) => c.getPluginData('pf') && !fs.includes(c)).map((c) => `${c.id}:${names(c).length}`).join(',');
+    fs.forEach((f) => {
+      const nm = names(f);
+      const nonAL = []; const w = (x) => { if (x.type === 'FRAME' && x._lm === 'NONE' && !/^(Icon｜|LOGO)/.test(x.name) && !(x.parent && /^(Icon｜|LOGO)/.test(x.parent.name))) nonAL.push(x.name); (x.children || []).forEach(w); }; w(f);
+      console.log(`⑧ #${n}:`, f.name, '| 寬', f.width, '| 站點', nm.filter((x) => /^Stop｜/.test(x)).join(' '), '| 卡片', nm.filter((x) => /^Card｜/.test(x)).length, '| 選中節點', nm.includes('Deco｜節點（選中）'), '| logo', nm.filter((x) => /^Logo｜/.test(x)).join(' '), '| 圖片', nm.filter((x) => x === 'Image｜logo').length, '| 非 Auto Layout 容器:', nonAL.length ? nonAL : '無');
+    });
+    console.log(`   ${closed} | 其他稿沒變:`, n === 1 ? before5.split(',').every((x) => others.includes(x)) : true, '| 在 03b 下方:', fs[0].x === ao.x && fs[0].y > ao.y + ao.height);
+  }
 })().catch((e) => { console.error('FAIL', e); process.exit(1); });

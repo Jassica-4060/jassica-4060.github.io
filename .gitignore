@@ -4,3 +4,8 @@ dist/
 .DS_Store
 # About 原文與密碼只留在本機，絕不上傳
 private/
+# 外掛打包結果含 About 私密內容（npm run figma 產生），不上傳
+figma-plugin/code.js
+
+# 測試工具暫存紀錄
+.playwright-mcp/

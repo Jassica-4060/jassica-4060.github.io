@@ -18,6 +18,14 @@ const fullTitle = title ? `${title}｜${profile.name} ${profile.nameEn}` : `${pr
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <!-- 分享縮圖（104、LINE、FB 等貼連結時顯示）：首頁主視覺截圖，避免平台抓到個人照片 -->
+    <meta property="og:image" content={new URL('/og-image.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta property="og:image:alt" content="黃思敏 C MIN 作品集首頁：Hi, I'm a Product Builder" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={new URL('/og-image.png', Astro.site)} />
     <meta name="theme-color" content="#f4f0e6" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

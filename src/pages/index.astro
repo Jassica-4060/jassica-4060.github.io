@@ -42,7 +42,7 @@ const roleIcons = [
       </p>
       <div class="actions">
         <a class="btn" href="#work">看作品 <span class="arrow" aria-hidden="true">↓</span></a>
-        <a class="btn btn--ghost" href="#contact">聯絡我／履歷</a>
+        <a class="btn btn--ghost" href={profile.cv} target="_blank" rel="noopener">查看 Designer CV<span class="sr-only">（另開新分頁）</span><span class="arrow" aria-hidden="true">↗</span></a>
       </div>
     </div>
   </section>
@@ -151,7 +151,7 @@ const roleIcons = [
       <p class="reveal">履歷與聯絡管道如下；完整的經歷與自我介紹在「關於我」（需密碼）。</p>
       <div class="reveal"><ContactLinks tone="dark" /></div>
       {profile.cv
-        ? <a class="btn btn--accent reveal" href={profile.cv} target="_blank" rel="noopener">查看 Designer CV<span class="sr-only">（PDF，另開新分頁）</span><span class="arrow" aria-hidden="true">↗</span></a>
+        ? <a class="btn btn--accent reveal" href={profile.cv} target="_blank" rel="noopener">查看 Designer CV<span class="sr-only">（另開新分頁）</span><span class="arrow" aria-hidden="true">↗</span></a>
         : <span class="btn btn--accent reveal is-disabled" aria-disabled="true">查看 Designer CV（PDF 待補）</span>}
     </div>
   </section>

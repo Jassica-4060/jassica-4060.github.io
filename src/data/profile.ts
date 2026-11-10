@@ -70,8 +70,8 @@ export const profile = {
       body: '面對快速變動的市場與新工具，我保持好奇與敏捷。勇於嘗試新方法，並透過數據與反饋持續修正，在不確定性中建立秩序，讓自己與產品共同進化。',
     },
   ],
-  // Designer CV：把 PDF 放進 public/cv/，再把路徑填進來（例：/cv/designer-cv.pdf）；留空 = 按鈕顯示為暫不可點
-  cv: '',
+  // Designer CV：把檔案放進 public/cv/，再把路徑填進來（例：/cv/designer-cv.pdf）；留空 = 按鈕顯示為暫不可點
+  cv: '/cv/C-MIN-Designer-CV-A4.png',
   contacts: [
     { label: '104 履歷', url: 'https://pda.104.com.tw/profile/share/ia8w4cI67carNd7r7fh9XjGNpJuJB6Rb' },
     { label: 'Cake 履歷', url: '' },
